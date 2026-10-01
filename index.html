@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Song+Myung&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Brush+Script&family=Song+Myung&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
@@ -50,7 +50,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Gowun Dodum',-
   .app{grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:36px;align-items:start}
   .preview{order:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}
 }
-.sheet{width:100%;max-width:620px;margin:0 auto;aspect-ratio:1240/1754;background:#F9F6EF;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.sheet{width:100%;max-width:620px;margin:0 auto;aspect-ratio:1240/1754;background:#F5F8FC;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
 .sheet canvas,.sheet img{display:block;width:100%;height:100%}
 .sheet img{-webkit-touch-callout:default}
 .preview-note{max-width:620px;margin:10px auto 0;text-align:center;font-size:14px;color:var(--muted);min-height:1.5em}
@@ -72,6 +72,11 @@ summary::-webkit-details-marker{display:none}
 summary::before{content:'';width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
 details[open] summary::before{transform:rotate(45deg)}
 .more{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.size-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.stepper{display:flex;align-items:center;gap:6px}
+.step{font:inherit;font-size:22px;line-height:1;width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);cursor:pointer}
+.step:disabled{opacity:.4;cursor:default}
+.stepper output{min-width:60px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}
 .linkbtn{align-self:flex-start;font:inherit;font-size:15px;color:var(--muted);background:none;border:none;padding:4px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .actions{position:sticky;bottom:0;z-index:5;margin:0 -20px;padding:14px 20px calc(14px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions.single{grid-template-columns:1fr}
@@ -103,7 +108,7 @@ details[open] summary::before{transform:rotate(45deg)}
     </div>
 
     <div class="field">
-      <div class="label-row"><label class="label" for="f-mains">추천 메뉴</label><span class="hint">한 줄에 하나씩</span></div>
+      <div class="label-row"><label class="label" for="f-mains">메인 메뉴</label><span class="hint">한 줄에 하나씩</span></div>
       <textarea id="f-mains" rows="2" spellcheck="false"></textarea>
     </div>
 
@@ -120,14 +125,30 @@ details[open] summary::before{transform:rotate(45deg)}
       </div>
     </div>
 
+    <div class="field">
+      <div class="label-row"><label class="label" for="f-salad">샐러드바 안내</label><span class="hint">20자 안팎 · 비우면 안 나와요</span></div>
+      <input id="f-salad" autocomplete="off">
+    </div>
+
+    <details>
+      <summary>글씨 크기</summary>
+      <div class="more" id="size-list">
+        <button type="button" class="linkbtn" id="size-reset">모두 보통(100%)으로</button>
+      </div>
+    </details>
+
     <details>
       <summary>문구 바꾸기</summary>
       <div class="more">
-        <div class="field"><label class="label" for="f-greet">맨 위 인사말</label><input id="f-greet" autocomplete="off"></div>
-        <div class="field"><label class="label" for="f-mainsTitle">추천 칸 이름</label><input id="f-mainsTitle" autocomplete="off"></div>
+        <div class="field">
+          <div class="label-row"><label class="label" for="f-greet">제목 아래 날짜</label><span class="hint">날짜는 매일 자동으로 바뀌어요</span></div>
+          <input id="f-greet" autocomplete="off">
+          <button type="button" class="linkbtn" id="today">오늘 날짜로 되돌리기</button>
+        </div>
+        <div class="field"><label class="label" for="f-mainsTitle">메인 칸 이름</label><input id="f-mainsTitle" autocomplete="off"></div>
         <div class="field"><label class="label" for="f-sidesTitle">반찬 칸 이름</label><input id="f-sidesTitle" autocomplete="off"></div>
         <div class="field"><label class="label" for="f-soupTitle">뚝배기 칸 이름</label><input id="f-soupTitle" autocomplete="off"></div>
-        <div class="field"><label class="label" for="f-closing">맨 아래 인사말</label><input id="f-closing" autocomplete="off"></div>
+        <div class="field"><label class="label" for="f-closing">맨 아래 인사말</label><input id="f-closing" autocomplete="off" placeholder="비우면 안 나와요"></div>
         <button type="button" class="linkbtn" id="reset">예시 메뉴로 되돌리기</button>
       </div>
     </details>
@@ -151,22 +172,36 @@ details[open] summary::before{transform:rotate(45deg)}
 <script>
 (() => {
   // ---------- 상태 ----------
+  const today = () => { const n = new Date(); return `${n.getMonth() + 1}월 ${n.getDate()}일 ${'일월화수목금토'[n.getDay()]}요일`; };
+  const DATE_RE = /^\d{1,2}월 \d{1,2}일 [일월화수목금토]요일$/;
   const DEFAULTS = {
     title: '오늘의 중식',
-    greet: '혼저옵서예',
-    mainsTitle: '오늘의 추천',
+    greet: today(),
+    mainsTitle: '메인 요리',
     mains: '간장돼지불고기\n소시지볶음',
     sidesTitle: '밥과 반찬',
     sides: '쌀밥\n흑미밥\n열무김치\n땅콩자반\n총알버섯햄볶음\n멸치볶음\n청경채무침\n숙주나물',
     soupTitle: '오늘의 뚝배기',
     soup: '황태해장국',
-    soupSub: '뜨끈한 뚝배기에 담아 드려요',
-    closing: '하영 드십서예'
+    soupSub: '뜨끈하게 끓여 냈어요',
+    salad: '샐러드바도 자유롭게 이용하세요',
+    closing: ''
   };
+  // 칸별 글씨 크기 (%): 70~150, 10씩
+  const SIZES = [['title', '제목'], ['mains', '메인 메뉴'], ['sides', '밥과 반찬'], ['soup', '뚝배기'], ['salad', '샐러드바']];
+  const SZ_MIN = 70, SZ_MAX = 150, SZ_STEP = 10;
+  const sizeOf = v => { const n = Math.round(Number(v)/SZ_STEP)*SZ_STEP; return n >= SZ_MIN && n <= SZ_MAX ? n : 100; };
+  // 예전 기본 문구(사투리·추천)를 그대로 쓰던 폰은 새 기본값으로 바꿔 줌
+  const OLD = { greet: '혼저옵서예', closing: '하영 드십서예', mainsTitle: '오늘의 추천' };
   const KEY = 'jeju-menu-v1';
   const load = () => {
-    try { const s = localStorage.getItem(KEY); if (s) return Object.assign({}, DEFAULTS, JSON.parse(s)); } catch (e) {}
-    return Object.assign({}, DEFAULTS);
+    let s = Object.assign({}, DEFAULTS);
+    try { const raw = localStorage.getItem(KEY); if (raw) s = Object.assign(s, JSON.parse(raw)); } catch (e) {}
+    for (const k in OLD) if (s[k] === OLD[k]) s[k] = DEFAULTS[k];
+    if (s.greet === OLD.greet || DATE_RE.test(s.greet.trim())) s.greet = today();
+    const sz = s.size && typeof s.size === 'object' ? s.size : {};
+    s.size = {}; SIZES.forEach(([k]) => { s.size[k] = sizeOf(sz[k]); });
+    return s;
   };
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
   let state = load();
@@ -202,10 +237,31 @@ details[open] summary::before{transform:rotate(45deg)}
       return;
     }
     clearTimeout(resetArmed); resetArmed = null; resetBtn.textContent = '예시 메뉴로 되돌리기';
-    state = Object.assign({}, DEFAULTS);
+    state = Object.assign({}, DEFAULTS, { size: state.size });   // 글씨 크기는 그대로 둠
     FIELDS.forEach(k => { $('f-' + k).value = state[k]; });
     areas.forEach(autoGrow);
     onChange();
+  });
+
+  // 글씨 크기 − / +
+  const sizeList = $('size-list'), sizeOut = {};
+  const syncSizes = () => SIZES.forEach(([k]) => {
+    const v = state.size[k], o = sizeOut[k];
+    o.out.textContent = v + '%'; o.dn.disabled = v <= SZ_MIN; o.up.disabled = v >= SZ_MAX;
+  });
+  SIZES.forEach(([k, name]) => {
+    const row = document.createElement('div'); row.className = 'size-row';
+    row.innerHTML = `<span class="label">${name}</span><div class="stepper"><button type="button" class="step" aria-label="${name} 글씨 작게">−</button><output aria-live="polite"></output><button type="button" class="step" aria-label="${name} 글씨 크게">+</button></div>`;
+    const [dn, up] = row.querySelectorAll('button');
+    sizeOut[k] = { out: row.querySelector('output'), dn, up };
+    dn.addEventListener('click', () => { state.size[k] = sizeOf(state.size[k] - SZ_STEP); syncSizes(); onChange(); });
+    up.addEventListener('click', () => { state.size[k] = sizeOf(state.size[k] + SZ_STEP); syncSizes(); onChange(); });
+    sizeList.insertBefore(row, $('size-reset'));
+  });
+  $('size-reset').addEventListener('click', () => { SIZES.forEach(([k]) => { state.size[k] = 100; }); syncSizes(); onChange(); });
+
+  $('today').addEventListener('click', () => {
+    state.greet = today(); $('f-greet').value = state.greet; onChange();
   });
 
   const lines = s => String(s || '').split(/[\n,]/).map(t => t.trim()).filter(Boolean);
@@ -214,26 +270,38 @@ details[open] summary::before{transform:rotate(45deg)}
     mainsTitle: state.mainsTitle.trim(), mains: lines(state.mains),
     sidesTitle: state.sidesTitle.trim(), sides: lines(state.sides),
     soupTitle: state.soupTitle.trim(), soups: lines(state.soup), soupSub: state.soupSub.trim(),
-    closing: state.closing.trim()
+    salad: state.salad.trim(), closing: state.closing.trim(),
+    fs: Object.fromEntries(SIZES.map(([k]) => [k, state.size[k]/100]))
   });
 
   // ---------- 메뉴판 그리기 (A4: 1240 x 1754 기준 단위) ----------
-  const C = { paper:'#F9F6EF', basalt:'#25292E', muted:'#5F666E', sea:'#1F7A78', seaPale:'#DCEEEA', tang:'#C85A0C', hair:'rgba(37,41,46,0.22)' };
-  const W = 1240, H = 1754, M = 44, FR = 24;
-  const IX = M + 2, IY = M + 2, IW = W - 2*M - 4, IH = H - 2*M - 4;
-  const BAND_H = 200, BAND_Y = IY + IH - BAND_H;
-  const CX0 = IX + 96, CW = IW - 192;
-  const CT = IY + 56, CB = BAND_Y - 20, CH = CB - CT;
+  const C = {
+    paper:'#F5F8FC', fiber:'#C7D2DF', ink:'#23262B', muted:'#636A73', stroke:'#4A4F57',
+    seal:'#B5372B', sealInk:'#FBF3EA', hair:'rgba(35,38,43,0.24)',
+    card:'#FFFFFF', cardLine:'rgba(35,38,43,0.20)', shade:'rgba(40,62,96,0.10)', sun:'#C8503A'
+  };
+  const INK = a => `rgba(35,38,43,${a})`, GLOW = a => `rgba(248,250,253,${a})`;
+  const W = 1240, H = 1754;
+  const FO = 48, FI = 56;                       // 바깥·안쪽 테두리 선 위치
+  const IX = FI + 1, IY = FI + 1, IW = W - 2*IX, IH = H - 2*IY;
+  const BAND_H = 196, BAND_Y = IY + IH - BAND_H;
+  const CX0 = 152, CW = W - 2*CX0;
+  const CT = IY + 40, CB = BAND_Y - 10, CH = CB - CT;   // 아래는 해(붉은 원)에 닿지 않게
+  const POT_CW = 240, POT_CH = 224, POT_W = 200, POT_H = POT_W*POT_CH/POT_CW;   // 뚝배기 캐시 크기 · 그릴 크기
+  const PAD_X = 36;                                // 카드 안 좌우 여백
+  const SALAD = '샐러드바', SALAD_RE = /샐러드(\s*바)?/, SI = 60, SIG = 16, SS = 36, SL = 48, SLH = 46;   // 샐러드바 줄: 아이콘 폭·간격, 글씨, 줄 높이·간격
   const SONG = s => `${s}px "Song Myung", "Nanum Myeongjo", serif`;
+  const BRUSH = s => `${s}px "Nanum Brush Script", "Song Myung", serif`;
   const BAT7 = s => `700 ${s}px "Gowun Batang", "Nanum Myeongjo", serif`;
   const BAT4 = s => `400 ${s}px "Gowun Batang", "Nanum Myeongjo", serif`;
 
   const spacedWidth = (c, t, sp) => { const ch = [...t]; let w = 0; for (const x of ch) w += c.measureText(x).width; return w + sp * Math.max(0, ch.length - 1); };
-  const drawSpaced = (c, t, x, y, sp, align = 'center') => {
+  const drawSpaced = (c, t, x, y, sp, align = 'center', stroke = 0) => {
     const total = spacedWidth(c, t, sp);
     let cx = align === 'center' ? x - total/2 : x;
     c.textAlign = 'left';
-    for (const ch of [...t]) { c.fillText(ch, cx, y); cx += c.measureText(ch).width + sp; }
+    if (stroke) { c.lineWidth = stroke; c.lineJoin = 'round'; c.strokeStyle = c.fillStyle; }
+    for (const ch of [...t]) { if (stroke) c.strokeText(ch, cx, y); c.fillText(ch, cx, y); cx += c.measureText(ch).width + sp; }
     return total;
   };
   const fit = (c, font, size, t, spEm, maxW) => {
@@ -248,232 +316,427 @@ details[open] summary::before{transform:rotate(45deg)}
     c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
     c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
   };
-  const tangerine = (c, x, y, size) => {
-    c.save(); c.translate(x, y); c.scale(size/26, size/26);
-    c.fillStyle = '#3F8156'; c.beginPath(); c.ellipse(17.5, 5.5, 5, 2.4, -28*Math.PI/180, 0, Math.PI*2); c.fill();
-    c.fillStyle = '#EE8424'; c.beginPath(); c.arc(13, 15, 10, 0, Math.PI*2); c.fill();
-    c.globalAlpha = .85; c.fillStyle = '#F8B466'; c.beginPath(); c.arc(9.6, 11.6, 2.6, 0, Math.PI*2); c.fill();
-    c.restore();
+  // 고정 시드 난수 (매번 같은 그림)
+  const seeded = seed => { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; };
+
+  // 붓으로 그은 듯 가운데가 굵고 끝이 가는 선
+  const brushLine = (c, x0, x1, y, th) => {
+    const len = x1 - x0;
+    c.beginPath(); c.moveTo(x0, y);
+    c.bezierCurveTo(x0 + len*.25, y - th*.62, x0 + len*.7, y - th*.5, x1, y - th*.05);
+    c.bezierCurveTo(x0 + len*.7, y + th*.5, x0 + len*.25, y + th*.52, x0, y);
+    c.closePath(); c.fill();
   };
-
-  // 돌담 + 귤나무 (고정 시드라 매번 같은 그림)
-  function makeBand() {
-    const sc = 2, cv = document.createElement('canvas');
-    cv.width = IW * sc; cv.height = BAND_H * sc;
-    const W0 = IW * 240 / BAND_H, H0 = 240;
-    const c = cv.getContext('2d'); c.scale(cv.width / W0, cv.height / H0);
-    let a = 11;
-    const rnd = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-    const U = (lo, hi) => lo + (hi - lo) * rnd();
-    const pick = arr => arr[Math.floor(rnd() * arr.length)];
-    const blob = (cx, cy, rx, ry, n, v) => {
-      const pts = [];
-      for (let i = 0; i < n; i++) { const an = 2*Math.PI*i/n + U(-.15, .15); const r = 1 + U(-v, v*.8); pts.push([cx + rx*r*Math.cos(an), cy + ry*r*Math.sin(an)]); }
-      const p = new Path2D(); p.moveTo(pts[0][0], pts[0][1]);
-      for (let i = 0; i < n; i++) {
-        const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
-        p.bezierCurveTo(p1[0] + (p2[0]-p0[0])/6, p1[1] + (p2[1]-p0[1])/6, p2[0] - (p3[0]-p1[0])/6, p2[1] - (p3[1]-p1[1])/6, p2[0], p2[1]);
-      }
-      p.closePath(); return p;
-    };
-    const fillP = (p, col, al = 1) => { c.globalAlpha = al; c.fillStyle = col; c.fill(p); c.globalAlpha = 1; };
-    const dot = (x, y, r, col, al = 1) => { c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill(); c.globalAlpha = 1; };
-
-    const back = ['#2E6645', '#346F4B'], front = ['#3F8156', '#4A8F61'], fruits = [];
-    for (let k = 0; 40 + k*185 <= W0 + 30; k++) {
-      const cx = 40 + k*185 + U(-18, 18), r = U(88, 104), cy = 108 + U(-8, 8);
-      fillP(blob(cx, cy, r, r*.86, 11, .08), pick(back));
-      for (let j = 0; j < 6; j++) {
-        const an = U(Math.PI*1.05, Math.PI*1.95), d = U(.35, .7)*r;
-        const br = U(.28, .42)*r;
-        fillP(blob(cx + d*Math.cos(an), cy + d*Math.sin(an)*.8, br, br*.9, 8, .1), pick(front), .9);
-      }
-      const nf = 5 + Math.floor(rnd()*3);
-      for (let f = 0; f < nf; f++) {
-        for (let t = 0; t < 30; t++) {
-          const an = U(0, Math.PI*2), d = U(.15, .78)*r;
-          const fx = cx + d*Math.cos(an), fy = cy + d*Math.sin(an)*.8;
-          if (fy < 128 && fruits.every(([ox, oy]) => (fx-ox)**2 + (fy-oy)**2 > 900)) { fruits.push([fx, fy, U(10, 13.5)]); break; }
-        }
-      }
-    }
-    for (const [fx, fy, fr] of fruits) {
-      c.save(); c.translate(fx + fr*.55, fy - fr*.95); c.rotate(-28*Math.PI/180);
-      c.fillStyle = '#2B5E40'; c.beginPath(); c.ellipse(0, 0, fr*.55, fr*.26, 0, 0, Math.PI*2); c.fill(); c.restore();
-      dot(fx, fy, fr, '#EE8424'); dot(fx - fr*.35, fy - fr*.35, fr*.28, '#F8B466', .85);
-    }
-    const fills = ['#2C3035', '#33373C', '#3B3F45', '#2F3338'];
-    const rows = [[160, 26], [206, 25], [250, 26]];
-    const shadows = [], stones = [];
-    rows.forEach(([cy, ry], i) => {
-      let x = -40 + (i % 2)*38;
-      while (x < W0 + 40) {
-        const w = U(66, 120), cx = x + w/2 + U(-3, 3);
-        const sy = cy + (i === 0 ? U(-7, 5) : U(-3, 3)), sry = ry*U(.9, 1.08);
-        if (i === 0) shadows.push(blob(cx, sy + 6, w/2*1.07, sry*1.08, 10, .06));
-        const st = { p: blob(cx, sy, w/2, sry, 10, .1), fill: pick(fills), pores: [], specks: [] };
-        const np = Math.floor(w*sry/60);
-        for (let q = 0; q < np; q++) { const an = U(0, Math.PI*2), d = Math.sqrt(rnd())*.78; st.pores.push([cx + d*(w/2)*Math.cos(an), sy + d*sry*Math.sin(an), U(.9, 2.5), U(.55, .9)]); }
-        const ns = 3 + Math.floor(rnd()*4);
-        for (let q = 0; q < ns; q++) { const an = U(0, Math.PI*2), d = Math.sqrt(rnd())*.7; st.specks.push([cx + d*(w/2)*Math.cos(an), sy + d*sry*Math.sin(an), U(.8, 1.5)]); }
-        stones.push(st);
-        x += w + U(3, 7);
-      }
+  const bez = (p0, p1, p2, p3, n = 28) => {
+    const o = [];
+    for (let i = 0; i <= n; i++) { const t = i/n, u = 1 - t, a = u*u*u, b = 3*u*u*t, e = 3*u*t*t, f = t*t*t; o.push([a*p0[0] + b*p1[0] + e*p2[0] + f*p3[0], a*p0[1] + b*p1[1] + e*p2[1] + f*p3[1]]); }
+    return o;
+  };
+  const arcPts = (cx, cy, rx, ry, a0, a1, n = 48) => { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0)*i/n; o.push([cx + rx*Math.cos(a), cy + ry*Math.sin(a)]); } return o; };
+  // 점을 따라 굵기가 변하는 붓 획 (wf: 0~1 → 반폭)
+  const ribbon = (c, pts, wf) => {
+    const n = pts.length - 1, L = [], R = [];
+    pts.forEach((p, i) => {
+      const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n, i + 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy) || 1, w = wf(i/n);
+      L.push([p[0] - dy/d*w, p[1] + dx/d*w]); R.push([p[0] + dy/d*w, p[1] - dx/d*w]);
     });
-    c.fillStyle = '#1A1D20'; c.fillRect(0, 186, W0, H0 - 186);
-    shadows.forEach(p => fillP(p, '#1A1D20'));
-    stones.forEach(s => {
-      fillP(s.p, s.fill);
-      s.pores.forEach(([x, y, r, al]) => dot(x, y, r, '#15171A', al));
-      s.specks.forEach(([x, y, r]) => dot(x, y, r, '#70767D', .5));
-    });
-    return cv;
-  }
+    c.beginPath(); L.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y));
+    for (let i = n; i >= 0; i--) c.lineTo(R[i][0], R[i][1]);
+    c.closePath(); c.fill();
+  };
+  const taper = (w, p = .7) => t => w*Math.pow(Math.sin(Math.PI*t), p);
 
-  // 김 나는 뚝배기
-  function makePot() {
-    const cv = document.createElement('canvas'); cv.width = 480; cv.height = 444;
-    const c = cv.getContext('2d'); c.scale(2, 2); c.translate(0, 14);
-    const ell = (x, y, rx, ry, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); c.fill(); };
-    const ring = (x, y, rx, ry) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); c.stroke(); };
-    const strokeP = (d, col, w, al = 1) => { c.globalAlpha = al; c.strokeStyle = col; c.lineWidth = w; c.stroke(new Path2D(d)); c.globalAlpha = 1; };
-    const dot = (x, y, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill(); };
-    c.lineCap = 'round';
-    ['M82 68 C68 52 96 40 82 22 C70 8 90 -2 84 -12', 'M120 62 C106 44 134 32 120 12 C108 -2 128 -10 122 -16', 'M158 68 C144 52 172 40 158 22 C146 8 166 -2 160 -12']
-      .forEach(d => strokeP(d, '#86A3A0', 6));
-    ell(120, 200, 116, 11, '#A9774A'); ell(120, 196, 116, 10, '#C99561');
-    c.fillStyle = '#35251E'; c.fill(new Path2D('M16 100 C16 126 18 150 28 168 C40 190 70 196 120 196 C170 196 200 190 212 168 C222 150 224 126 224 100 Z'));
-    strokeP('M20 126 C60 146 180 146 220 126', '#221712', 3.5, .7);
-    strokeP('M22 134 C60 153 180 153 218 134', '#5A4034', 2, .6);
-    strokeP('M40 146 C44 164 56 178 78 186', '#5C4436', 7, .7);
-    [[150,166,1.6],[178,160,1.3],[130,182,1.5],[104,170,1.2],[196,170,1.4],[66,168,1.2]].forEach(([x,y,r]) => dot(x, y, r, '#54403A'));
-    ell(120, 100, 106, 24, '#5A3B2A');
-    ell(120, 98, 92, 17, '#EFE4CC'); c.strokeStyle = '#D8C6A4'; c.lineWidth = 2; ring(120, 98, 92, 17);
-    [['M72 96 l26 5', 5], ['M128 92 l24 -3', 5], ['M150 104 l22 2', 5], ['M96 107 l20 -1', 4]].forEach(([d, w]) => strokeP(d, '#D2B280', w));
-    ell(108, 97, 13, 4, '#F1CD63'); ell(140, 100, 11, 3.4, '#F1CD63'); ell(84, 103, 9, 3, '#F1CD63');
-    c.strokeStyle = '#5C9A48'; c.lineWidth = 2.6;
-    [[122,94,5,2.2],[96,91,4.5,2],[162,97,5,2.2],[128,107,4.5,2]].forEach(([x,y,rx,ry]) => ring(x, y, rx, ry));
-    [[114,103,1.6],[150,95,1.4],[78,99,1.4]].forEach(([x,y,r]) => dot(x, y, r, '#C9432F'));
-    c.globalAlpha = .95; c.strokeStyle = '#FFFFFF'; c.lineWidth = 2.2;
-    [[60,98,5,3],[70,90,3.4,2],[176,92,5,3],[186,100,3.4,2],[134,87,3.6,2.2],[100,109,3.2,2]].forEach(([x,y,rx,ry]) => ring(x, y, rx, ry));
+
+  // 한지 섬유결
+  function makePaper() {
+    const sc = 2, cv = document.createElement('canvas'); cv.width = W*sc; cv.height = H*sc;
+    const c = cv.getContext('2d'); c.scale(sc, sc);
+    c.fillStyle = C.paper; c.fillRect(0, 0, W, H);
+    const rnd = seeded(7), U = (lo, hi) => lo + (hi - lo)*rnd();
+    c.strokeStyle = C.fiber; c.lineCap = 'round';
+    for (let i = 0; i < 120; i++) {
+      const x = U(0, W), y = U(0, H), an = U(0, Math.PI*2), len = U(14, 46), bend = U(-.5, .5);
+      const x1 = x + Math.cos(an)*len, y1 = y + Math.sin(an)*len;
+      const mx = (x + x1)/2 - Math.sin(an)*len*bend*.4, my = (y + y1)/2 + Math.cos(an)*len*bend*.4;
+      c.globalAlpha = U(.35, .75); c.lineWidth = U(.7, 1.3);
+      c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(mx, my, x1, y1); c.stroke();
+    }
     c.globalAlpha = 1;
     return cv;
   }
 
-  let BAND = null, POT = null;
+  // 수묵화 한라산 + 붉은 해
+  function makeBand() {
+    const sc = 2, cv = document.createElement('canvas'); cv.width = IW*sc; cv.height = BAND_H*sc;
+    const c = cv.getContext('2d'); c.scale(sc, sc);
+    const w = IW, h = BAND_H, rnd = seeded(23), U = (lo, hi) => lo + (hi - lo)*rnd();
+    const ridge = (pts, jitter) => {
+      // 점들을 부드럽게 이은 능선 + 잔 떨림
+      const out = [];
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [x0, y0] = pts[i], [x1, y1] = pts[i + 1];
+        for (let s = 0; s < 12; s++) {
+          const t = s/12, e = (1 - Math.cos(t*Math.PI))/2;
+          out.push([x0 + (x1 - x0)*t, y0 + (y1 - y0)*e + U(-jitter, jitter)]);
+        }
+      }
+      out.push(pts[pts.length - 1]);
+      return out;
+    };
+    const layer = (pts, jitter, top, bottom, colTop, aTop, aBot) => {
+      const r = ridge(pts, jitter);
+      const g = c.createLinearGradient(0, top, 0, bottom);
+      g.addColorStop(0, `rgba(${colTop},${aTop})`); g.addColorStop(1, `rgba(${colTop},${aBot})`);
+      c.fillStyle = g; c.beginPath(); c.moveTo(r[0][0], h + 2);
+      r.forEach(([x, y]) => c.lineTo(x, y)); c.lineTo(r[r.length - 1][0], h + 2); c.closePath(); c.fill();
+    };
+    // 해
+    c.fillStyle = C.sun; c.beginPath(); c.arc(w*.755, h*.17, 29, 0, Math.PI*2); c.fill();
+    // 뒷산 (한라산)
+    layer([[-10, h*.93], [w*.12, h*.78], [w*.3, h*.42], [w*.47, h*.12], [w*.55, h*.11], [w*.7, h*.33], [w*.88, h*.62], [w + 10, h*.74]], .8, h*.1, h, '112,118,128', .5, .08);
+    // 중간 능선
+    layer([[-10, h*.78], [w*.1, h*.68], [w*.22, h*.74], [w*.34, h*.8], [w*.5, h*.7], [w*.62, h*.75], [w*.78, h*.72], [w*.9, h*.66], [w + 10, h*.7]], .6, h*.64, h, '72,78,88', .66, .16);
+    // 앞산
+    layer([[-10, h*.84], [w*.08, h*.74], [w*.2, h*.82], [w*.27, h*.9], [w*.4, h*.86], [w*.52, h*.92], [w*.66, h*.8], [w*.76, h*.76], [w*.88, h*.85], [w + 10, h*.8]], .5, h*.72, h, '40,44,51', .9, .5);
+    return cv;
+  }
 
-  function blocksOf(d) {
-    const b = [];
-    const head = (d.greet ? 50 : 0) + (d.title ? 145 : 0);
-    if (head) b.push({ t: 'head', h: head });
+  // 김 오르는 뚝배기 (어떤 국·찌개에도 맞게 건더기 없이 국물과 김만)
+  function makePot() {
+    const cv = document.createElement('canvas'); cv.width = POT_CW*2; cv.height = POT_CH*2;
+    const c = cv.getContext('2d'); c.scale(2, 2);
+    const E = (x, y, rx, ry) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); };
+    const fillE = (x, y, rx, ry, col) => { E(x, y, rx, ry); c.fillStyle = col; c.fill(); };
+    const strokeP = (d, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.stroke(new Path2D(d)); };
+    const rnd = seeded(41), U = (lo, hi) => lo + (hi - lo)*rnd();
+    c.lineCap = 'round';
+    // 바닥 그림자 + 두툼한 나무 받침
+    fillE(120, 215, 108, 6.5, 'rgba(40,52,70,0.12)');
+    fillE(120, 206, 116, 12, '#7E4C2A'); c.fillStyle = '#7E4C2A'; c.fillRect(4, 192, 232, 14);
+    fillE(120, 192, 116, 12, '#B57A45');
+    c.strokeStyle = 'rgba(122,74,38,0.55)'; c.lineWidth = 1.2;
+    E(120, 192, 99, 10); c.stroke(); E(120, 192, 80, 8); c.stroke();
+    strokeP('M14 199 C60 212 180 212 226 199', 'rgba(255,226,186,0.30)', 1.6);
+    // 몸통 (윤기 도는 검은 흙빛)
+    const body = new Path2D('M16 106 C16 140 24 166 42 182 C58 195 88 199 120 199 C152 199 182 195 198 182 C216 166 224 140 224 106 Z');
+    const bg = c.createLinearGradient(16, 0, 224, 0);
+    bg.addColorStop(0, '#4E392E'); bg.addColorStop(.38, '#3B2B23'); bg.addColorStop(1, '#231915');
+    c.fillStyle = bg; c.fill(body);
+    c.save(); c.clip(body);
+    strokeP('M17 130 C60 153 180 153 223 130', 'rgba(20,13,10,0.85)', 3.2);
+    strokeP('M18 137 C60 160 180 160 222 137', 'rgba(120,92,74,0.55)', 1.6);
+    c.fillStyle = 'rgba(126,100,84,0.5)';
+    for (let i = 0; i < 30; i++) { c.beginPath(); c.arc(U(30, 210), U(146, 192), U(.6, 1.4), 0, Math.PI*2); c.fill(); }
+    strokeP('M34 120 C36 148 46 168 66 184', 'rgba(255,255,255,0.13)', 9);
+    strokeP('M190 168 C200 158 206 146 209 132', 'rgba(255,255,255,0.06)', 5);
+    c.restore();
+    // 전 (입구 테두리) + 안쪽 벽
+    fillE(120, 106, 106, 24, '#5B4334');
+    c.beginPath(); c.ellipse(120, 106, 105, 23, 0, .15*Math.PI, .85*Math.PI);
+    c.strokeStyle = 'rgba(255,255,255,0.20)'; c.lineWidth = 2; c.stroke();
+    fillE(120, 105, 93, 17.5, '#1E1510');
+    // 국물: 짙은 갈색 윤기 + 가장자리 기포, 가운데만 김이 살짝 덮음 (어떤 찌개에도 맞게)
+    const open = () => E(120, 105, 93, 17.5);
+    c.save(); open(); c.clip();
+    const sg = c.createRadialGradient(108, 106, 4, 120, 110, 96);
+    sg.addColorStop(0, '#A65A2C'); sg.addColorStop(.55, '#743818'); sg.addColorStop(1, '#41200F');
+    fillE(120, 109, 90, 14.5, sg);
+    fillE(84, 104, 26, 3.2, 'rgba(255,214,170,0.22)');
+    strokeP('M44 112 C76 122 164 122 196 112', 'rgba(255,214,170,0.40)', 1.6);
+    c.strokeStyle = 'rgba(255,225,195,0.55)'; c.lineWidth = 1.1;
+    [[50,108,4.4],[62,114,3.2],[176,114,4],[190,108,3],[160,118,2.6]].forEach(([x, y, r]) => {
+      E(x, y, r, r*.6); c.stroke(); fillE(x - r*.35, y - r*.25, r*.28, r*.18, 'rgba(255,236,214,0.7)');
+    });
+    const puff = (x, y, rx, ry, a) => {
+      c.save(); c.translate(x, y); c.scale(1, ry/rx);
+      const g = c.createRadialGradient(0, 0, 0, 0, 0, rx);
+      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(.55, `rgba(255,255,255,${a*.6})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(0, 0, rx, 0, Math.PI*2); c.fill(); c.restore();
+    };
+    puff(100, 104, 46, 11, .45); puff(142, 103, 44, 10, .4); puff(120, 108, 62, 9, .22);
+    c.restore();
+    // 피어오르는 김
+    const wisp = (x0, yb, yt, amp, ph, w) => {
+      const L = [], R = [], N = 40;
+      for (let i = 0; i <= N; i++) {
+        const t = i/N, y = yb - (yb - yt)*t, x = x0 + amp*Math.sin(t*Math.PI*2.1 + ph)*(.35 + .65*t);
+        const hw = w/2*Math.pow(Math.sin(Math.PI*Math.min(1, t*1.05 + .02)), .7);
+        L.push([x - hw, y]); R.push([x + hw, y]);
+      }
+      const g = c.createLinearGradient(0, yb, 0, yt);
+      g.addColorStop(0, 'rgba(138,158,184,0)'); g.addColorStop(.2, 'rgba(138,158,184,0.85)');
+      g.addColorStop(.7, 'rgba(138,158,184,0.6)'); g.addColorStop(1, 'rgba(138,158,184,0)');
+      c.fillStyle = g; c.beginPath(); c.moveTo(...L[0]);
+      L.forEach(p => c.lineTo(...p)); R.reverse().forEach(p => c.lineTo(...p)); c.closePath(); c.fill();
+    };
+    wisp(84, 104, 16, 8, .4, 11); wisp(120, 100, 2, 10, 2.2, 12.5); wisp(156, 104, 16, 8, 4.1, 11);
+    return cv;
+  }
+
+  // '제주' 낙관
+  function seal(c, cx, cy, size) {
+    c.save(); c.translate(cx, cy); c.rotate(-4*Math.PI/180);
+    const h = size/2;
+    rr(c, -h, -h, size, size, size*.07); c.fillStyle = C.seal; c.fill();
+    c.strokeStyle = C.sealInk; c.lineWidth = Math.max(1.2, size*.022);
+    rr(c, -h + size*.09, -h + size*.09, size*.82, size*.82, size*.04); c.stroke();
+    c.fillStyle = C.sealInk; c.textAlign = 'center'; c.font = SONG(size*.36);
+    c.fillText('제', 0, -size*.2); c.fillText('주', 0, size*.21);
+    c.restore();
+  }
+
+  // 샐러드바 아이콘: 먹선 그릇에 굵은 잎 세 장 + 붉은 방울토마토 (작게 줄여도 알아보게 단순하게)
+  function makeSalad() {
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 112;
+    const c = cv.getContext('2d'); c.scale(2, 2);
+    const P = Math.PI;
+    const leaf = (bx, by, tx, ty, wm, bend) => {
+      const L = Math.hypot(tx - bx, ty - by), ux = (tx - bx)/L, uy = (ty - by)/L, nx = -uy, ny = ux, N = 32, l = [], r = [], mid = [];
+      for (let i = 0; i <= N; i++) {
+        const t = i/N, o = bend*Math.sin(P*t), cx = bx + ux*L*t + nx*o, cy = by + uy*L*t + ny*o;
+        const hw = wm*Math.pow(Math.sin(P*Math.pow(t, .72)), .8)*(1 + .06*Math.sin(t*26));
+        mid.push([cx, cy]); l.push([cx + nx*hw, cy + ny*hw]); r.push([cx - nx*hw, cy - ny*hw]);
+      }
+      const p = new Path2D(); l.forEach(([x, y], i) => i ? p.lineTo(x, y) : p.moveTo(x, y)); for (let i = N; i >= 0; i--) p.lineTo(r[i][0], r[i][1]); p.closePath();
+      const g = c.createLinearGradient(bx, by, tx, ty); g.addColorStop(0, INK(.24)); g.addColorStop(1, INK(.05));
+      c.fillStyle = C.paper; c.fill(p); c.fillStyle = g; c.fill(p);
+      c.strokeStyle = INK(.9); c.lineWidth = 1.8; c.lineJoin = 'round'; c.stroke(p);
+      c.fillStyle = INK(.85); ribbon(c, mid.slice(1, 26), t => 1.3*(1 - t) + .3);
+    };
+    c.strokeStyle = INK(.55); c.lineWidth = 1.2; c.beginPath(); c.ellipse(32, 33, 28, 5, 0, P, P*2); c.stroke();
+    leaf(25, 33, 6, 11, 7.5, 2.2);
+    leaf(39, 33, 58, 11, 7.5, -2.2);
+    leaf(32, 33, 32, 3, 8.5, -1.2);
+    // 방울토마토
+    const tx = 43, ty = 29, tr = 6.6;
+    c.fillStyle = C.seal; c.beginPath(); c.arc(tx, ty, tr, 0, P*2); c.fill();
+    c.strokeStyle = INK(.8); c.lineWidth = 1.1; c.stroke();
+    c.fillStyle = GLOW(.6); c.beginPath(); c.arc(tx - tr*.35, ty - tr*.32, tr*.26, 0, P*2); c.fill();
+    c.strokeStyle = INK(.9); c.lineWidth = 1.2; c.lineCap = 'round';
+    [-1, 0, 1].forEach(i => { c.beginPath(); c.moveTo(tx, ty - tr + 1.2); c.lineTo(tx + i*3.4, ty - tr + 2.6 + Math.abs(i)*.6); c.stroke(); });
+    // 그릇: 먹선 하나로
+    const bowl = new Path2D('M4 33 C6 46 17 53 32 53 C47 53 58 46 60 33 C52 37 12 37 4 33 Z');
+    c.fillStyle = C.paper; c.fill(bowl); c.fillStyle = INK(.12); c.fill(bowl);
+    c.fillStyle = INK(.92); ribbon(c, bez([4, 33], [6, 46], [17, 53], [32, 53]).concat(bez([32, 53], [47, 53], [58, 46], [60, 33]).slice(1)), t => .8 + 1.4*Math.sin(P*t));
+    ribbon(c, arcPts(32, 33, 28, 5, 0, P, 32), t => .7 + 1*Math.sin(P*t));
+    ribbon(c, bez([22, 55], [28, 56.2], [36, 56.2], [42, 55], 12), taper(1.1, .6));
+    return cv;
+  }
+
+
+  // 너무 길면 가운데에 가까운 띄어쓰기(없으면 ·,)) 자리에서 두 줄로
+  const split2 = t => {
+    const m = t.length/2, at = re => { let b = -1; t.split('').forEach((ch, i) => { if (re.test(ch) && (b < 0 || Math.abs(i - m) < Math.abs(b - m))) b = i; }); return b; };
+    let i = at(/\s/); if (i > 0) return [t.slice(0, i).trim(), t.slice(i + 1).trim()];
+    i = at(/[·,)]/); if (i >= 0 && i < t.length - 1) return [t.slice(0, i + 1), t.slice(i + 1)];
+    i = Math.ceil(m); return [t.slice(0, i), t.slice(i)];
+  };
+  const widthAt = (c, font, size, t, spEm) => { c.font = font(size); return spacedWidth(c, t, size*spEm); };
+  // ---- 샐러드바 줄: '샐러드(바)' 글자는 붉은 굵은 글씨, 나머지는 보통 글씨 ----
+  const MC = document.createElement('canvas').getContext('2d');   // blocksOf 에서 글자 폭 재기용
+  const SF = [BAT4, BAT7, BAT4], SCOL = [C.ink, C.seal, C.muted];
+  const saladSegs = t => {
+    const m = t.match(SALAD_RE);
+    return m ? [[t.slice(0, m.index), 0], [m[0], 1], [t.slice(m.index + m[0].length), 0]].filter(x => x[0]) : [[SALAD, 1], [' · ', 2], [t, 0]];
+  };
+  const segsW = (c, segs, s) => segs.reduce((w, [t, st]) => { c.font = SF[st](s); return w + c.measureText(t).width; }, 0);
+  const cutSegs = (segs, i, skip) => {
+    const a = [], b = []; let p = 0;
+    for (const [t, st] of segs) {
+      const q = p + t.length;
+      if (q <= i) a.push([t, st]); else if (p >= i + skip) b.push([t, st]);
+      else { if (i > p) a.push([t.slice(0, i - p), st]); if (q > i + skip) b.push([t.slice(Math.max(0, i + skip - p)), st]); }
+      p = q;
+    }
+    return [a, b];
+  };
+  // wrap 이면 폭이 반씩 되게 두 줄로 (보통 글씨의 띄어쓰기에서만, 없으면 글자 사이)
+  function saladLines(d, wrap) {
+    const f = d.fs.salad, segs = saladSegs(d.salad), w = segsW(MC, segs, SS);
+    if (!wrap) return { lines: [segs], h: SL*f, w, f };
+    const cand = [], sp = [];
+    let p = 0;
+    for (const [t, st] of segs) { if (!st) for (let j = 0; j < t.length; j++) (t[j] === ' ' ? sp : cand).push(p + j); p += t.length; }
+    const list = sp.length ? sp.map(i => [i, 1]) : cand.filter(i => i > 0).map(i => [i, 0]);
+    let best = null, bd = 1e9;
+    for (const [i, skip] of list) { const dd = Math.abs(segsW(MC, cutSegs(segs, i, skip)[0], SS) - w/2); if (dd < bd) { bd = dd; best = cutSegs(segs, i, skip); } }
+    return best && best[0].length && best[1].length ? { lines: best, h: (SL + SLH)*f, w, f } : { lines: [segs], h: SL*f, w, f };
+  }
+  function saladRow(c, sl, y, k) {
+    const f = sl.f, iw = SI*f*k, ih = SI*.875*f*k, g = SIG*k, max = CW - iw - g, n = sl.lines.length;
+    let s = SS*f*k;
+    const mw = Math.max(...sl.lines.map(l => segsW(c, l, s)));
+    if (mw > max) s *= max/mw;
+    const tw = Math.min(mw, max), gw = iw + g + tw, x0 = W/2 - gw/2, cy = y + sl.h*k/2;
+    c.drawImage(SALAD_IC, x0, cy - ih/2 - 3*k, iw, ih);
+    c.textAlign = 'left';
+    sl.lines.forEach((l, j) => {
+      let x = x0 + iw + g; const ly = cy + (j - (n - 1)/2)*SLH*f*k;
+      l.forEach(([t, st]) => { c.font = SF[st](s); c.fillStyle = SCOL[st]; c.fillText(t, x, ly); x += c.measureText(t).width; });
+    });
+    // 양옆 옅은 붓선 (자리가 남을 때만)
+    const gap = 26*k, len = Math.min(96*k, (CW - gw)/2 - gap);
+    if (n === 1 && len > 36*k) {
+      c.fillStyle = INK(.3);
+      brushLine(c, x0 - gap - len, x0 - gap, cy + 2*k, 4.5*k);
+      c.save(); c.translate(W, 0); c.scale(-1, 1); brushLine(c, W - (x0 + gw + gap) - len, W - (x0 + gw + gap), cy + 2*k, 4.5*k); c.restore();
+    }
+  }
+
+  let PAPER = null, BAND = null, POT = null, SALAD_IC = null;
+
+  // 블록 높이와 줄 나눔은 여기서만 정하고 draw는 그대로 따름
+  // 제목 낙관 크기 · 제목이 실제로 커지는 비율 (폭이 차면 더 안 커지고, 100%보다 작아지지도 않음)
+  const sealOf = f => 100*(1 + (f - 1)*.5);
+  const titleF = (c, d) => { const f = d.fs.title, w = widthAt(c, BRUSH, 236*f, d.title, .03), a = CW - 2*(sealOf(f) + 18); return w > a ? Math.min(f, Math.max(1, f*a/w)) : f; };
+
+  function blocksOf(d, c, wrap) {
+    const b = [], fs = d.fs;
+    const tf = d.title ? titleF(c, d) : 1;
+    const head = (d.title ? 212*tf : 0) + (d.greet ? 52 : 0);
+    if (head) b.push({ t: 'head', h: head, tf });
     const secT = t => t ? 70 : 0;
-    if (d.mains.length) b.push({ t: 'mains', h: secT(d.mainsTitle) + d.mains.length*89 + (d.mains.length - 1)*12 });
+    if (d.mains.length) b.push({ t: 'mains', h: secT(d.mainsTitle) + d.mains.length*89*fs.mains + (d.mains.length - 1)*12 });
     if (d.sides.length) {
       const cols = d.sides.length > 1 ? 2 : 1, rows = Math.ceil(d.sides.length / cols);
-      b.push({ t: 'sides', h: secT(d.sidesTitle) + rows*54 + (rows - 1)*18, cols, rows });
+      b.push({ t: 'sides', h: secT(d.sidesTitle) + rows*54*fs.sides + (rows - 1)*18, cols, rows });
     }
     if (d.soups.length) {
-      const th = d.soups.length*85 + (d.soups.length - 1)*4 + (d.soupSub ? 53 : 0);
-      const inner = Math.max(194, th);
-      b.push({ t: 'soup', h: secT(d.soupTitle) + 44 + inner, inner, th });
+      // 국 이름이 56px 아래로 줄어들 만큼 길면 두 줄 (이어지는 줄은 78 간격)
+      const f = fs.soup, avail = CW - 2*PAD_X - POT_W - 34;
+      const names = d.soups.map(t => widthAt(c, SONG, 74*f, t, .02)*56/74 > avail ? split2(t) : [t]);
+      const th = names.reduce((s, x) => s + (85 + (x.length - 1)*78)*f, 0) + (names.length - 1)*4 + (d.soupSub ? 53*f : 0);
+      const up = Math.max(POT_H + 28, th + 48);               // 뚝배기 위아래 14, 글 위아래 24
+      b.push({ t: 'soup', h: secT(d.soupTitle) + up, up, th, names });
     }
+    if (d.salad) { const sl = saladLines(d, wrap); b.push({ t: 'salad', h: sl.h, sl }); }   // 뚝배기 카드와 나눈 따로 한 줄
     if (d.closing) b.push({ t: 'closing', h: 53 });
     return b;
   }
 
   function secTitle(c, text, y, k) {
-    const s = fit(c, SONG, 42*k, text, .06, CW*.7);
-    const sp = s*.06, tw = spacedWidth(c, text, sp), cy = y + 23*k;
-    c.fillStyle = C.sea; drawSpaced(c, text, W/2, cy, sp);
-    c.fillStyle = C.hair;
-    const g = 26*k, l = W/2 - tw/2 - g, r = W/2 + tw/2 + g;
-    if (l > CX0) c.fillRect(CX0, cy - .75, l - CX0, 1.5);
-    if (CX0 + CW > r) c.fillRect(r, cy - .75, CX0 + CW - r, 1.5);
+    const s = fit(c, SONG, 42*k, text, .22, CW*.6);
+    const sp = s*.22, tw = spacedWidth(c, text, sp), cy = y + 23*k;
+    c.fillStyle = C.seal; drawSpaced(c, text, W/2, cy, sp, 'center', s*.02);
+    c.fillStyle = C.stroke;
+    const g = 30*k, len = 150*k, l = W/2 - tw/2 - g, r = W/2 + tw/2 + g;
+    brushLine(c, l - len, l, cy + 2*k, 7*k);
+    c.save(); c.translate(2*W/2, 0); c.scale(-1, 1); brushLine(c, W - r - len, W - r, cy + 2*k, 7*k); c.restore();
   }
 
   function draw(c, scale, d) {
+    if (!PAPER) PAPER = makePaper();
     if (!BAND) BAND = makeBand();
     if (!POT) POT = makePot();
+    if (!SALAD_IC) SALAD_IC = makeSalad();
     c.setTransform(scale, 0, 0, scale, 0, 0);
     c.textBaseline = 'middle';
-    c.fillStyle = C.paper; c.fillRect(0, 0, W, H);
-    c.save(); rr(c, IX, IY, IW, IH, FR - 2); c.clip(); c.drawImage(BAND, IX, BAND_Y, IW, BAND_H); c.restore();
-    c.save(); rr(c, M + 1, M + 1, W - 2*M - 2, H - 2*M - 2, FR - 1); c.lineWidth = 2; c.strokeStyle = C.basalt; c.stroke(); c.restore();
+    c.drawImage(PAPER, 0, 0, W, H);
+    c.drawImage(BAND, IX, BAND_Y, IW, BAND_H);
+    c.strokeStyle = C.ink;
+    c.lineWidth = 2.6; c.strokeRect(FO, FO, W - 2*FO, H - 2*FO);
+    c.lineWidth = 1.4; c.strokeRect(FI, FI, W - 2*FI, H - 2*FI);
 
-    const blocks = blocksOf(d), n = blocks.length;
+    let blocks = blocksOf(d, c);
+    const n = blocks.length, G = n - 1;
     if (!n) return { k: 1 };
+    const kOf = bs => Math.min(1, (CH - G*28) / bs.reduce((s, b) => s + b.h, 0));
+    let k = kOf(blocks);
+    // 샐러드바 문구가 한 줄로는 다른 글씨보다 눈에 띄게 작아질 때만 두 줄로
+    const sb = blocks.find(b => b.sl);
+    if (sb && SS*(CW - (SI*sb.sl.f + SIG)*k)/sb.sl.w < 34*sb.sl.f*k) { blocks = blocksOf(d, c, true); k = kOf(blocks); }
     const T1 = blocks.reduce((s, b) => s + b.h, 0);
-    const k = Math.min(1, (CH - (n - 1)*28) / T1);
-    const gap = n > 1 ? Math.min(84, (CH - k*T1) / (n - 1)) : 0;
-    let y = CT + Math.max(0, (CH - k*T1 - (n - 1)*gap) / 2);
+    // 남는 자리는 먼저 위아래 여백 22씩(제목·해 숨 쉴 자리), 그다음 블록 사이 간격으로
+    const free = CH - k*T1;
+    const gap = G ? Math.min(60, Math.max(28, (free - 44) / G)) : 0;
+    let y = CT + Math.max(0, (free - G*gap) / 2);
 
-    for (const b of blocks) {
+    blocks.forEach((b, i) => { if (i) y += gap;
       let yy = y;
       if (b.t === 'head') {
-        if (d.greet) {
-          const icon = 30*k, g = 16*k;
-          const s = fit(c, BAT7, 32*k, d.greet, .16, CW - 2*(icon + g));
-          const tw = spacedWidth(c, d.greet, s*.16), rowW = 2*icon + 2*g + tw;
-          const x = W/2 - rowW/2, cy = yy + 22*k;
-          tangerine(c, x, cy - icon/2, icon);
-          c.fillStyle = C.sea; drawSpaced(c, d.greet, x + icon + g, cy, s*.16, 'left');
-          tangerine(c, x + icon + g + tw + g, cy - icon/2, icon);
-          yy += 50*k;
-        }
         if (d.title) {
-          const s = fit(c, SONG, 132*k, d.title, .02, CW);
-          c.fillStyle = C.basalt; drawSpaced(c, d.title, W/2, yy + 72.5*k, s*.02);
+          const tf = b.tf, sealS = sealOf(tf)*k, sg = 18*k;
+          const s = fit(c, BRUSH, 236*tf*k, d.title, .03, CW - 2*(sealS + sg));
+          c.fillStyle = C.ink;
+          const tw = drawSpaced(c, d.title, W/2, yy + 104*tf*k, s*.03, 'center', s*.024);
+          seal(c, W/2 + tw/2 + sg + sealS/2, yy + 126*tf*k, sealS);
+          yy += 212*tf*k;
+        }
+        if (d.greet) {
+          const s = fit(c, BAT4, 30*k, d.greet, .3, CW*.8);
+          c.fillStyle = C.muted; drawSpaced(c, d.greet, W/2, yy + 28*k, s*.3);
         }
       } else if (b.t === 'mains') {
         if (d.mainsTitle) { secTitle(c, d.mainsTitle, yy, k); yy += 70*k; }
+        const f = d.fs.mains;
         for (const m of d.mains) {
-          const s = fit(c, SONG, 74*k, m, .02, CW);
-          c.fillStyle = C.basalt; drawSpaced(c, m, W/2, yy + 44.5*k, s*.02);
-          yy += 101*k;
+          const s = fit(c, SONG, 78*f*k, m, .02, CW);
+          c.fillStyle = C.ink; drawSpaced(c, m, W/2, yy + 44.5*f*k, s*.02, 'center', s*.018);
+          yy += (89*f + 12)*k;
         }
       } else if (b.t === 'sides') {
         if (d.sidesTitle) { secTitle(c, d.sidesTitle, yy, k); yy += 70*k; }
-        const two = b.cols === 2, colW = two ? (CW - 1.5)/2 : CW;
-        if (two) { c.fillStyle = C.hair; c.fillRect(CX0 + colW, yy, 1.5, (b.rows*54 + (b.rows - 1)*18)*k); }
+        const two = b.cols === 2, colW = two ? (CW - 1.5)/2 : CW, f = d.fs.sides;
+        if (two) {   // 가운데 붓선 (양 끝이 가늘게)
+          const len = (b.rows*54*f + (b.rows - 1)*18)*k;
+          c.save(); c.translate(CX0 + colW + .75, yy); c.rotate(Math.PI/2);
+          c.fillStyle = C.hair; brushLine(c, 0, len, 0, 3.2); c.restore();
+        }
         d.sides.forEach((t, i) => {
           const col = two ? i % 2 : 0, row = two ? Math.floor(i/2) : i;
           const cx = two ? (col === 0 ? CX0 + colW/2 : CX0 + colW + 1.5 + colW/2) : W/2;
-          fit(c, BAT7, 40*k, t, 0, colW - 24);
-          c.fillStyle = C.basalt; drawSpaced(c, t, cx, yy + (row*72 + 27)*k, 0);
+          fit(c, BAT7, 40*f*k, t, 0, colW - 24);
+          c.fillStyle = C.ink; drawSpaced(c, t, cx, yy + (row*(54*f + 18) + 27*f)*k, 0);
         });
       } else if (b.t === 'soup') {
         if (d.soupTitle) { secTitle(c, d.soupTitle, yy, k); yy += 70*k; }
-        const ph = (44 + b.inner)*k;
-        rr(c, CX0, yy, CW, ph, 20*k); c.fillStyle = C.seaPale; c.fill();
-        const potW = 210*k, potH = 194*k, g = 30*k, innerX = CX0 + 30*k, innerW = CW - 70*k;
+        // 흰 카드: 아래로 살짝 비낀 그림자 + 가는 테두리 + 가운데 짧은 붉은 선
+        const ph = b.up*k, r = 4*k;
+        rr(c, CX0, yy + 4*k, CW, ph, r); c.fillStyle = C.shade; c.fill();
+        rr(c, CX0, yy, CW, ph, r); c.fillStyle = C.card; c.fill();
+        c.strokeStyle = C.cardLine; c.lineWidth = 1.5; c.stroke();
+        c.fillStyle = C.seal; c.fillRect(W/2 - 60*k, yy, 120*k, 5*k);
+        const potW = POT_W*k, potH = POT_H*k, g = 34*k, innerX = CX0 + PAD_X*k, innerW = CW - 2*PAD_X*k;
         const avail = innerW - potW - g;
-        const names = d.soups.map(t => { const s = fit(c, SONG, 74*k, t, .02, avail); return { t, s, w: spacedWidth(c, t, s*.02) }; });
+        const f = d.fs.soup;
+        const names = b.names.map(ls => {
+          let s = 74*f*k; ls.forEach(t => { s = Math.min(s, fit(c, SONG, 74*f*k, t, .02, avail)); });
+          c.font = SONG(s); return { ls, s, w: Math.max(...ls.map(t => spacedWidth(c, t, s*.02))) };
+        });
         let sub = null;
-        if (d.soupSub) { const s = fit(c, BAT4, 32*k, d.soupSub, 0, avail); sub = { t: d.soupSub, s, w: spacedWidth(c, d.soupSub, 0) }; }
+        if (d.soupSub) { const s = fit(c, BAT4, 32*f*k, d.soupSub, 0, avail); sub = { t: d.soupSub, s, w: spacedWidth(c, d.soupSub, 0) }; }
         const textW = Math.max(sub ? sub.w : 0, ...names.map(x => x.w));
-        const gx = innerX + (innerW - (potW + g + textW))/2;
-        c.drawImage(POT, gx, yy + (ph - potH)/2, potW, potH);
+        const gx = innerX + (innerW - (potW + g + textW))/2, inH = b.up*k;
+        c.drawImage(POT, gx, yy + (inH - potH)/2, potW, potH);
         const tx = gx + potW + g;
-        let ty = yy + (ph - b.th*k)/2;
-        names.forEach(x => { c.font = SONG(x.s); c.fillStyle = C.basalt; drawSpaced(c, x.t, tx, ty + 42.5*k, x.s*.02, 'left'); ty += 89*k; });
-        if (sub) { c.font = BAT4(sub.s); c.fillStyle = C.muted; drawSpaced(c, sub.t, tx, ty + 4*k + 22.5*k, 0, 'left'); }
+        let ty = yy + (inH - b.th*k)/2;
+        names.forEach(x => {
+          c.font = SONG(x.s); c.fillStyle = C.ink;
+          x.ls.forEach((t, j) => { drawSpaced(c, t, tx, ty + 42.5*f*k, x.s*.02, 'left', x.s*.018); ty += (j < x.ls.length - 1 ? 78*f : 85*f + 4)*k; });
+        });
+        if (sub) { c.font = BAT4(sub.s); c.fillStyle = C.muted; drawSpaced(c, sub.t, tx, ty + 26.5*f*k, 0, 'left'); }
+      } else if (b.t === 'salad') {
+        saladRow(c, b.sl, yy, k);
       } else if (b.t === 'closing') {
-        fit(c, SONG, 44*k, d.closing, 0, CW);
-        c.fillStyle = C.tang; drawSpaced(c, d.closing, W/2, yy + 26.5*k, 0);
+        const s = fit(c, SONG, 40*k, d.closing, .1, CW);
+        c.fillStyle = C.seal; drawSpaced(c, d.closing, W/2, yy + 26.5*k, s*.1);
       }
-      y += b.h*k + gap;
-    }
+      y += b.h*k;
+    });
     return { k };
   }
 
   async function ensureFonts(d) {
     if (!document.fonts || !document.fonts.load) return;
-    const song = [d.title, d.mainsTitle, d.sidesTitle, d.soupTitle, d.closing, ...d.mains, ...d.soups].join('') || '가';
-    const b7 = [d.greet, ...d.sides].join('') || '가';
-    const b4 = d.soupSub || '가';
+    const song = [d.mainsTitle, d.sidesTitle, d.soupTitle, d.closing, ...d.mains, ...d.soups, '제주'].join('') || '가';
+    const brush = d.title || '가';
+    const b7 = [...d.sides, d.salad, d.salad ? SALAD : ''].join('') || '가';
+    const b4 = [d.greet, d.soupSub, d.salad, d.salad ? SALAD + '·' : ''].join('') || '가';
     try {
       await Promise.all([
         document.fonts.load(SONG(40), song),
+        document.fonts.load(BRUSH(40), brush),
         document.fonts.load(BAT7(40), b7),
         document.fonts.load(BAT4(40), b4)
       ]);
@@ -581,6 +844,7 @@ details[open] summary::before{transform:rotate(45deg)}
   // ---------- 시작 ----------
   areas.forEach(autoGrow);
   syncChips();
+  syncSizes();
   renderPreview();
 })();
 </script>
