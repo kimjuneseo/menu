@@ -58,7 +58,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Gowun Dodum',-
 .field{display:flex;flex-direction:column;gap:8px;margin:0}
 .label-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .label{font-size:17px;color:var(--text)}
-.hint{font-size:14px;color:var(--muted)}
+.hint{font-size:14px;color:var(--muted);text-align:right}
+.label-row .label{flex-shrink:0}
 input,textarea{font:inherit;font-size:18px;line-height:1.6;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;width:100%;max-width:100%}
 textarea{resize:vertical;overflow:hidden}
 input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--focus)}
@@ -113,7 +114,7 @@ details[open] summary::before{transform:rotate(45deg)}
     </div>
 
     <div class="field">
-      <div class="label-row"><label class="label" for="f-sides">밥과 반찬</label><span class="hint">한 줄에 하나씩 · 두 줄로 나눠 배치</span></div>
+      <div class="label-row"><label class="label" for="f-sides">밥과 반찬</label><span class="hint">한 줄에 하나씩 · 두 단으로 나눠 배치</span></div>
       <textarea id="f-sides" rows="8" spellcheck="false"></textarea>
     </div>
 
@@ -141,7 +142,7 @@ details[open] summary::before{transform:rotate(45deg)}
       <summary>문구 바꾸기</summary>
       <div class="more">
         <div class="field">
-          <div class="label-row"><label class="label" for="f-greet">제목 아래 날짜</label><span class="hint">날짜는 매일 자동으로 바뀌어요</span></div>
+          <div class="label-row"><label class="label" for="f-greet">제목 아래 날짜</label><span class="hint">‘○월 ○일 ○요일’ 모양이면 매일 바뀌어요</span></div>
           <input id="f-greet" autocomplete="off">
           <button type="button" class="linkbtn" id="today">오늘 날짜로 되돌리기</button>
         </div>
@@ -156,7 +157,7 @@ details[open] summary::before{transform:rotate(45deg)}
     <div class="actions" id="actions">
       <button type="button" class="btn btn-primary" id="save-png">이미지 저장</button>
       <button type="button" class="btn btn-secondary" id="save-pdf">인쇄용 PDF</button>
-      <p class="fallback" id="share-hint" hidden>공유 창에서 ‘이미지 저장’을 누르면 사진첩에 저장되고, 카카오톡을 고르면 바로 보낼 수 있어요.</p>
+      <p class="fallback" id="share-hint" hidden>공유 창에서 카카오톡을 고르면 바로 보낼 수 있어요. 아이폰은 ‘이미지 저장’을 누르면 사진첩에 저장돼요.</p>
       <p class="status" id="status" role="status" aria-live="polite"></p>
     </div>
   </section>
@@ -200,7 +201,7 @@ details[open] summary::before{transform:rotate(45deg)}
   const SZ_MIN = 70, SZ_MAX = 150, SZ_STEP = 10;
   const sizeOf = v => { const n = Math.round(Number(v)/SZ_STEP)*SZ_STEP; return n >= SZ_MIN && n <= SZ_MAX ? n : 100; };
   // 예전 기본 문구(사투리·추천)를 그대로 쓰던 폰은 새 기본값으로 바꿔 줌. 기본값을 또 바꾸면 예전 값을 배열에 더할 것
-  const OLD = { greet: ['혼저옵서예'], closing: ['하영 드십서예'], mainsTitle: ['오늘의 추천'] };
+  const OLD = { greet: ['혼저옵서예'], closing: ['하영 드십서예'], mainsTitle: ['오늘의 추천'], soupSub: ['뜨끈한 뚝배기에 담아 드려요'] };
   const KEY = 'jeju-menu-v1';
   const load = () => {
     let s = Object.assign({}, DEFAULTS);

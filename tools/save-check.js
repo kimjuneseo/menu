@@ -11,7 +11,7 @@ const { launch, urlOf } = require('./browser');
   if (!target || !outDir) { console.error('사용법: node save-check.js <index.html 또는 주소> <출력 폴더, 예: out/download>'); process.exit(2); }
   const dir = path.resolve(outDir);
   fs.mkdirSync(dir, { recursive: true });
-  // 지난번에 만든 png·pdf 만 지움 (다운로드가 끝났는지 확장자로 알아보기 때문)
+  // 폴더 안의 png·pdf 파일을 모두 지움 (다운로드가 끝났는지 확장자로 알아보기 때문)
   for (const f of fs.readdirSync(dir)) { const p = path.join(dir, f); if (/\.(png|pdf)$/i.test(f) && fs.statSync(p).isFile()) fs.unlinkSync(p); }
   const browser = await launch();
   const errors = [];
