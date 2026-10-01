@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>메뉴판 만들기</title>
+<meta name="theme-color" content="#1F7A78">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="메뉴판">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Song+Myung&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F3EFE6; --surface:#FFFFFF; --surface-2:#FAF8F3; --text:#25292E; --muted:#5F666E;
+  --line:rgba(37,41,46,.14); --accent:#1F7A78; --accent-ink:#FFFFFF; --accent-soft:#DCEEEA;
+  --focus:rgba(31,122,120,.30); --shadow:0 1px 2px rgba(37,41,46,.06),0 14px 36px rgba(37,41,46,.12);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181B; --surface:#1E2226; --surface-2:#252A2F; --text:#ECEAE4; --muted:#A4AAB0;
+    --line:rgba(255,255,255,.12); --accent:#43AAA6; --accent-ink:#0C1818; --accent-soft:#1F3634;
+    --focus:rgba(67,170,166,.38); --shadow:0 1px 2px rgba(0,0,0,.3),0 14px 36px rgba(0,0,0,.4);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181B; --surface:#1E2226; --surface-2:#252A2F; --text:#ECEAE4; --muted:#A4AAB0;
+  --line:rgba(255,255,255,.12); --accent:#43AAA6; --accent-ink:#0C1818; --accent-soft:#1F3634;
+  --focus:rgba(67,170,166,.38); --shadow:0 1px 2px rgba(0,0,0,.3),0 14px 36px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Gowun Dodum',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%}
+.top{max-width:1180px;margin:0 auto;padding:28px 20px 4px}
+.top h1{font-family:'Song Myung',serif;font-weight:400;font-size:clamp(30px,5vw,40px);line-height:1.2;margin:0}
+.top p{margin:6px 0 0;color:var(--muted);font-size:16px}
+.app{max-width:1180px;margin:0 auto;padding:16px 20px 32px;display:grid;gap:22px}
+.preview{order:-1;min-width:0}
+@media (min-width:920px){
+  .app{grid-template-columns:minmax(360px,440px) minmax(0,1fr);gap:36px;align-items:start}
+  .preview{order:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}
+}
+.sheet{width:100%;max-width:620px;margin:0 auto;aspect-ratio:1240/1754;background:#F9F6EF;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.sheet canvas,.sheet img{display:block;width:100%;height:100%}
+.sheet img{-webkit-touch-callout:default}
+.preview-note{max-width:620px;margin:10px auto 0;text-align:center;font-size:14px;color:var(--muted);min-height:1.5em}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 20px 0;display:flex;flex-direction:column;gap:20px;min-width:0}
+.field{display:flex;flex-direction:column;gap:8px;margin:0}
+.label-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.label{font-size:17px;color:var(--text)}
+.hint{font-size:14px;color:var(--muted)}
+input,textarea{font:inherit;font-size:18px;line-height:1.6;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;width:100%;max-width:100%}
+textarea{resize:vertical;overflow:hidden}
+input:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--focus)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:15px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.pair{display:grid;gap:10px}
+details{border-top:1px solid var(--line);padding-top:16px}
+summary{cursor:pointer;color:var(--muted);font-size:16px;list-style:none;display:flex;align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:'';width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details[open] summary::before{transform:rotate(45deg)}
+.more{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.linkbtn{align-self:flex-start;font:inherit;font-size:15px;color:var(--muted);background:none;border:none;padding:4px 0;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.actions{position:sticky;bottom:0;z-index:5;margin:0 -20px;padding:14px 20px calc(14px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);border-radius:0 0 18px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions.single{grid-template-columns:1fr}
+.actions.static{position:static}
+.btn{font:inherit;font-size:17px;min-height:52px;border-radius:14px;border:1px solid transparent;cursor:pointer;padding:0 14px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-secondary{background:transparent;color:var(--text);border-color:var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+.status{grid-column:1/-1;margin:0;font-size:14px;color:var(--muted);min-height:1.5em;text-align:center}
+.fallback{grid-column:1/-1;margin:0;font-size:15px;color:var(--text);background:var(--accent-soft);border-radius:12px;padding:12px 14px}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>메뉴판 만들기</h1>
+  <p>메뉴 이름만 바꾸면 A4 메뉴판이 바로 만들어져요. 입력한 내용은 이 휴대폰(브라우저)에 저장돼서 다음에 열어도 그대로 남아 있어요.</p>
+</header>
+
+<main class="app">
+  <section class="panel" aria-label="메뉴 입력">
+    <div class="field">
+      <label class="label" for="f-title">제목</label>
+      <input id="f-title" autocomplete="off">
+      <div class="chips" role="group" aria-label="제목 빠른 선택">
+        <button type="button" class="chip" data-title="오늘의 중식">오늘의 중식</button>
+        <button type="button" class="chip" data-title="오늘의 석식">오늘의 석식</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="label-row"><label class="label" for="f-mains">추천 메뉴</label><span class="hint">한 줄에 하나씩</span></div>
+      <textarea id="f-mains" rows="2" spellcheck="false"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="label-row"><label class="label" for="f-sides">밥과 반찬</label><span class="hint">한 줄에 하나씩 · 두 줄로 나눠 배치</span></div>
+      <textarea id="f-sides" rows="8" spellcheck="false"></textarea>
+    </div>
+
+    <div class="field">
+      <div class="label-row"><label class="label" for="f-soup">뚝배기 (국)</label><span class="hint">한 줄에 하나씩</span></div>
+      <div class="pair">
+        <textarea id="f-soup" rows="1" spellcheck="false"></textarea>
+        <input id="f-soupSub" autocomplete="off" aria-label="국 아래 설명 문구" placeholder="국 아래 설명 (비우면 안 나와요)">
+      </div>
+    </div>
+
+    <details>
+      <summary>문구 바꾸기</summary>
+      <div class="more">
+        <div class="field"><label class="label" for="f-greet">맨 위 인사말</label><input id="f-greet" autocomplete="off"></div>
+        <div class="field"><label class="label" for="f-mainsTitle">추천 칸 이름</label><input id="f-mainsTitle" autocomplete="off"></div>
+        <div class="field"><label class="label" for="f-sidesTitle">반찬 칸 이름</label><input id="f-sidesTitle" autocomplete="off"></div>
+        <div class="field"><label class="label" for="f-soupTitle">뚝배기 칸 이름</label><input id="f-soupTitle" autocomplete="off"></div>
+        <div class="field"><label class="label" for="f-closing">맨 아래 인사말</label><input id="f-closing" autocomplete="off"></div>
+        <button type="button" class="linkbtn" id="reset">예시 메뉴로 되돌리기</button>
+      </div>
+    </details>
+
+    <div class="actions" id="actions">
+      <button type="button" class="btn btn-primary" id="save-png">이미지 저장</button>
+      <button type="button" class="btn btn-secondary" id="save-pdf">인쇄용 PDF</button>
+      <p class="fallback" id="share-hint" hidden>공유 창에서 ‘이미지 저장’을 누르면 사진첩에 저장되고, 카카오톡을 고르면 바로 보낼 수 있어요.</p>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="preview" aria-label="미리보기">
+    <div class="sheet">
+      <canvas id="pv" width="1240" height="1754" aria-label="메뉴판 미리보기"></canvas>
+    </div>
+    <p class="preview-note" id="note"></p>
+  </section>
+</main>
+
+<script>
+(() => {
+  // ---------- 상태 ----------
+  const DEFAULTS = {
+    title: '오늘의 중식',
+    greet: '혼저옵서예',
+    mainsTitle: '오늘의 추천',
+    mains: '간장돼지불고기\n소시지볶음',
+    sidesTitle: '밥과 반찬',
+    sides: '쌀밥\n흑미밥\n열무김치\n땅콩자반\n총알버섯햄볶음\n멸치볶음\n청경채무침\n숙주나물',
+    soupTitle: '오늘의 뚝배기',
+    soup: '황태해장국',
+    soupSub: '뜨끈한 뚝배기에 담아 드려요',
+    closing: '하영 드십서예'
+  };
+  const KEY = 'jeju-menu-v1';
+  const load = () => {
+    try { const s = localStorage.getItem(KEY); if (s) return Object.assign({}, DEFAULTS, JSON.parse(s)); } catch (e) {}
+    return Object.assign({}, DEFAULTS);
+  };
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+  let state = load();
+
+  const $ = id => document.getElementById(id);
+  const FIELDS = Object.keys(DEFAULTS);
+  const areas = [];
+  const autoGrow = el => { el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; };
+
+  FIELDS.forEach(k => {
+    const el = $('f-' + k);
+    el.value = state[k];
+    if (el.tagName === 'TEXTAREA') areas.push(el);
+    el.addEventListener('input', () => {
+      state[k] = el.value;
+      if (el.tagName === 'TEXTAREA') autoGrow(el);
+      onChange();
+    });
+  });
+
+  const chips = [...document.querySelectorAll('.chip[data-title]')];
+  const syncChips = () => chips.forEach(c => c.setAttribute('aria-pressed', String(state.title.trim() === c.dataset.title)));
+  chips.forEach(c => c.addEventListener('click', () => {
+    state.title = c.dataset.title; $('f-title').value = state.title; onChange();
+  }));
+
+  const resetBtn = $('reset');
+  let resetArmed = null;
+  resetBtn.addEventListener('click', () => {
+    if (!resetArmed) {
+      resetBtn.textContent = '한 번 더 누르면 예시로 되돌려요';
+      resetArmed = setTimeout(() => { resetArmed = null; resetBtn.textContent = '예시 메뉴로 되돌리기'; }, 3000);
+      return;
+    }
+    clearTimeout(resetArmed); resetArmed = null; resetBtn.textContent = '예시 메뉴로 되돌리기';
+    state = Object.assign({}, DEFAULTS);
+    FIELDS.forEach(k => { $('f-' + k).value = state[k]; });
+    areas.forEach(autoGrow);
+    onChange();
+  });
+
+  const lines = s => String(s || '').split(/[\n,]/).map(t => t.trim()).filter(Boolean);
+  const model = () => ({
+    title: state.title.trim(), greet: state.greet.trim(),
+    mainsTitle: state.mainsTitle.trim(), mains: lines(state.mains),
+    sidesTitle: state.sidesTitle.trim(), sides: lines(state.sides),
+    soupTitle: state.soupTitle.trim(), soups: lines(state.soup), soupSub: state.soupSub.trim(),
+    closing: state.closing.trim()
+  });
+
+  // ---------- 메뉴판 그리기 (A4: 1240 x 1754 기준 단위) ----------
+  const C = { paper:'#F9F6EF', basalt:'#25292E', muted:'#5F666E', sea:'#1F7A78', seaPale:'#DCEEEA', tang:'#C85A0C', hair:'rgba(37,41,46,0.22)' };
+  const W = 1240, H = 1754, M = 44, FR = 24;
+  const IX = M + 2, IY = M + 2, IW = W - 2*M - 4, IH = H - 2*M - 4;
+  const BAND_H = 200, BAND_Y = IY + IH - BAND_H;
+  const CX0 = IX + 96, CW = IW - 192;
+  const CT = IY + 56, CB = BAND_Y - 20, CH = CB - CT;
+  const SONG = s => `${s}px "Song Myung", "Nanum Myeongjo", serif`;
+  const BAT7 = s => `700 ${s}px "Gowun Batang", "Nanum Myeongjo", serif`;
+  const BAT4 = s => `400 ${s}px "Gowun Batang", "Nanum Myeongjo", serif`;
+
+  const spacedWidth = (c, t, sp) => { const ch = [...t]; let w = 0; for (const x of ch) w += c.measureText(x).width; return w + sp * Math.max(0, ch.length - 1); };
+  const drawSpaced = (c, t, x, y, sp, align = 'center') => {
+    const total = spacedWidth(c, t, sp);
+    let cx = align === 'center' ? x - total/2 : x;
+    c.textAlign = 'left';
+    for (const ch of [...t]) { c.fillText(ch, cx, y); cx += c.measureText(ch).width + sp; }
+    return total;
+  };
+  const fit = (c, font, size, t, spEm, maxW) => {
+    c.font = font(size);
+    const w = spacedWidth(c, t, size*spEm);
+    const s = w > maxW ? size * maxW / w : size;
+    c.font = font(s);
+    return s;
+  };
+  const rr = (c, x, y, w, h, r) => {
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  };
+  const tangerine = (c, x, y, size) => {
+    c.save(); c.translate(x, y); c.scale(size/26, size/26);
+    c.fillStyle = '#3F8156'; c.beginPath(); c.ellipse(17.5, 5.5, 5, 2.4, -28*Math.PI/180, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#EE8424'; c.beginPath(); c.arc(13, 15, 10, 0, Math.PI*2); c.fill();
+    c.globalAlpha = .85; c.fillStyle = '#F8B466'; c.beginPath(); c.arc(9.6, 11.6, 2.6, 0, Math.PI*2); c.fill();
+    c.restore();
+  };
+
+  // 돌담 + 귤나무 (고정 시드라 매번 같은 그림)
+  function makeBand() {
+    const sc = 2, cv = document.createElement('canvas');
+    cv.width = IW * sc; cv.height = BAND_H * sc;
+    const W0 = IW * 240 / BAND_H, H0 = 240;
+    const c = cv.getContext('2d'); c.scale(cv.width / W0, cv.height / H0);
+    let a = 11;
+    const rnd = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    const U = (lo, hi) => lo + (hi - lo) * rnd();
+    const pick = arr => arr[Math.floor(rnd() * arr.length)];
+    const blob = (cx, cy, rx, ry, n, v) => {
+      const pts = [];
+      for (let i = 0; i < n; i++) { const an = 2*Math.PI*i/n + U(-.15, .15); const r = 1 + U(-v, v*.8); pts.push([cx + rx*r*Math.cos(an), cy + ry*r*Math.sin(an)]); }
+      const p = new Path2D(); p.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 0; i < n; i++) {
+        const p0 = pts[(i-1+n)%n], p1 = pts[i], p2 = pts[(i+1)%n], p3 = pts[(i+2)%n];
+        p.bezierCurveTo(p1[0] + (p2[0]-p0[0])/6, p1[1] + (p2[1]-p0[1])/6, p2[0] - (p3[0]-p1[0])/6, p2[1] - (p3[1]-p1[1])/6, p2[0], p2[1]);
+      }
+      p.closePath(); return p;
+    };
+    const fillP = (p, col, al = 1) => { c.globalAlpha = al; c.fillStyle = col; c.fill(p); c.globalAlpha = 1; };
+    const dot = (x, y, r, col, al = 1) => { c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill(); c.globalAlpha = 1; };
+
+    const back = ['#2E6645', '#346F4B'], front = ['#3F8156', '#4A8F61'], fruits = [];
+    for (let k = 0; 40 + k*185 <= W0 + 30; k++) {
+      const cx = 40 + k*185 + U(-18, 18), r = U(88, 104), cy = 108 + U(-8, 8);
+      fillP(blob(cx, cy, r, r*.86, 11, .08), pick(back));
+      for (let j = 0; j < 6; j++) {
+        const an = U(Math.PI*1.05, Math.PI*1.95), d = U(.35, .7)*r;
+        const br = U(.28, .42)*r;
+        fillP(blob(cx + d*Math.cos(an), cy + d*Math.sin(an)*.8, br, br*.9, 8, .1), pick(front), .9);
+      }
+      const nf = 5 + Math.floor(rnd()*3);
+      for (let f = 0; f < nf; f++) {
+        for (let t = 0; t < 30; t++) {
+          const an = U(0, Math.PI*2), d = U(.15, .78)*r;
+          const fx = cx + d*Math.cos(an), fy = cy + d*Math.sin(an)*.8;
+          if (fy < 128 && fruits.every(([ox, oy]) => (fx-ox)**2 + (fy-oy)**2 > 900)) { fruits.push([fx, fy, U(10, 13.5)]); break; }
+        }
+      }
+    }
+    for (const [fx, fy, fr] of fruits) {
+      c.save(); c.translate(fx + fr*.55, fy - fr*.95); c.rotate(-28*Math.PI/180);
+      c.fillStyle = '#2B5E40'; c.beginPath(); c.ellipse(0, 0, fr*.55, fr*.26, 0, 0, Math.PI*2); c.fill(); c.restore();
+      dot(fx, fy, fr, '#EE8424'); dot(fx - fr*.35, fy - fr*.35, fr*.28, '#F8B466', .85);
+    }
+    const fills = ['#2C3035', '#33373C', '#3B3F45', '#2F3338'];
+    const rows = [[160, 26], [206, 25], [250, 26]];
+    const shadows = [], stones = [];
+    rows.forEach(([cy, ry], i) => {
+      let x = -40 + (i % 2)*38;
+      while (x < W0 + 40) {
+        const w = U(66, 120), cx = x + w/2 + U(-3, 3);
+        const sy = cy + (i === 0 ? U(-7, 5) : U(-3, 3)), sry = ry*U(.9, 1.08);
+        if (i === 0) shadows.push(blob(cx, sy + 6, w/2*1.07, sry*1.08, 10, .06));
+        const st = { p: blob(cx, sy, w/2, sry, 10, .1), fill: pick(fills), pores: [], specks: [] };
+        const np = Math.floor(w*sry/60);
+        for (let q = 0; q < np; q++) { const an = U(0, Math.PI*2), d = Math.sqrt(rnd())*.78; st.pores.push([cx + d*(w/2)*Math.cos(an), sy + d*sry*Math.sin(an), U(.9, 2.5), U(.55, .9)]); }
+        const ns = 3 + Math.floor(rnd()*4);
+        for (let q = 0; q < ns; q++) { const an = U(0, Math.PI*2), d = Math.sqrt(rnd())*.7; st.specks.push([cx + d*(w/2)*Math.cos(an), sy + d*sry*Math.sin(an), U(.8, 1.5)]); }
+        stones.push(st);
+        x += w + U(3, 7);
+      }
+    });
+    c.fillStyle = '#1A1D20'; c.fillRect(0, 186, W0, H0 - 186);
+    shadows.forEach(p => fillP(p, '#1A1D20'));
+    stones.forEach(s => {
+      fillP(s.p, s.fill);
+      s.pores.forEach(([x, y, r, al]) => dot(x, y, r, '#15171A', al));
+      s.specks.forEach(([x, y, r]) => dot(x, y, r, '#70767D', .5));
+    });
+    return cv;
+  }
+
+  // 김 나는 뚝배기
+  function makePot() {
+    const cv = document.createElement('canvas'); cv.width = 480; cv.height = 444;
+    const c = cv.getContext('2d'); c.scale(2, 2); c.translate(0, 14);
+    const ell = (x, y, rx, ry, col) => { c.fillStyle = col; c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); c.fill(); };
+    const ring = (x, y, rx, ry) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); c.stroke(); };
+    const strokeP = (d, col, w, al = 1) => { c.globalAlpha = al; c.strokeStyle = col; c.lineWidth = w; c.stroke(new Path2D(d)); c.globalAlpha = 1; };
+    const dot = (x, y, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI*2); c.fill(); };
+    c.lineCap = 'round';
+    ['M82 68 C68 52 96 40 82 22 C70 8 90 -2 84 -12', 'M120 62 C106 44 134 32 120 12 C108 -2 128 -10 122 -16', 'M158 68 C144 52 172 40 158 22 C146 8 166 -2 160 -12']
+      .forEach(d => strokeP(d, '#86A3A0', 6));
+    ell(120, 200, 116, 11, '#A9774A'); ell(120, 196, 116, 10, '#C99561');
+    c.fillStyle = '#35251E'; c.fill(new Path2D('M16 100 C16 126 18 150 28 168 C40 190 70 196 120 196 C170 196 200 190 212 168 C222 150 224 126 224 100 Z'));
+    strokeP('M20 126 C60 146 180 146 220 126', '#221712', 3.5, .7);
+    strokeP('M22 134 C60 153 180 153 218 134', '#5A4034', 2, .6);
+    strokeP('M40 146 C44 164 56 178 78 186', '#5C4436', 7, .7);
+    [[150,166,1.6],[178,160,1.3],[130,182,1.5],[104,170,1.2],[196,170,1.4],[66,168,1.2]].forEach(([x,y,r]) => dot(x, y, r, '#54403A'));
+    ell(120, 100, 106, 24, '#5A3B2A');
+    ell(120, 98, 92, 17, '#EFE4CC'); c.strokeStyle = '#D8C6A4'; c.lineWidth = 2; ring(120, 98, 92, 17);
+    [['M72 96 l26 5', 5], ['M128 92 l24 -3', 5], ['M150 104 l22 2', 5], ['M96 107 l20 -1', 4]].forEach(([d, w]) => strokeP(d, '#D2B280', w));
+    ell(108, 97, 13, 4, '#F1CD63'); ell(140, 100, 11, 3.4, '#F1CD63'); ell(84, 103, 9, 3, '#F1CD63');
+    c.strokeStyle = '#5C9A48'; c.lineWidth = 2.6;
+    [[122,94,5,2.2],[96,91,4.5,2],[162,97,5,2.2],[128,107,4.5,2]].forEach(([x,y,rx,ry]) => ring(x, y, rx, ry));
+    [[114,103,1.6],[150,95,1.4],[78,99,1.4]].forEach(([x,y,r]) => dot(x, y, r, '#C9432F'));
+    c.globalAlpha = .95; c.strokeStyle = '#FFFFFF'; c.lineWidth = 2.2;
+    [[60,98,5,3],[70,90,3.4,2],[176,92,5,3],[186,100,3.4,2],[134,87,3.6,2.2],[100,109,3.2,2]].forEach(([x,y,rx,ry]) => ring(x, y, rx, ry));
+    c.globalAlpha = 1;
+    return cv;
+  }
+
+  let BAND = null, POT = null;
+
+  function blocksOf(d) {
+    const b = [];
+    const head = (d.greet ? 50 : 0) + (d.title ? 145 : 0);
+    if (head) b.push({ t: 'head', h: head });
+    const secT = t => t ? 70 : 0;
+    if (d.mains.length) b.push({ t: 'mains', h: secT(d.mainsTitle) + d.mains.length*89 + (d.mains.length - 1)*12 });
+    if (d.sides.length) {
+      const cols = d.sides.length > 1 ? 2 : 1, rows = Math.ceil(d.sides.length / cols);
+      b.push({ t: 'sides', h: secT(d.sidesTitle) + rows*54 + (rows - 1)*18, cols, rows });
+    }
+    if (d.soups.length) {
+      const th = d.soups.length*85 + (d.soups.length - 1)*4 + (d.soupSub ? 53 : 0);
+      const inner = Math.max(194, th);
+      b.push({ t: 'soup', h: secT(d.soupTitle) + 44 + inner, inner, th });
+    }
+    if (d.closing) b.push({ t: 'closing', h: 53 });
+    return b;
+  }
+
+  function secTitle(c, text, y, k) {
+    const s = fit(c, SONG, 42*k, text, .06, CW*.7);
+    const sp = s*.06, tw = spacedWidth(c, text, sp), cy = y + 23*k;
+    c.fillStyle = C.sea; drawSpaced(c, text, W/2, cy, sp);
+    c.fillStyle = C.hair;
+    const g = 26*k, l = W/2 - tw/2 - g, r = W/2 + tw/2 + g;
+    if (l > CX0) c.fillRect(CX0, cy - .75, l - CX0, 1.5);
+    if (CX0 + CW > r) c.fillRect(r, cy - .75, CX0 + CW - r, 1.5);
+  }
+
+  function draw(c, scale, d) {
+    if (!BAND) BAND = makeBand();
+    if (!POT) POT = makePot();
+    c.setTransform(scale, 0, 0, scale, 0, 0);
+    c.textBaseline = 'middle';
+    c.fillStyle = C.paper; c.fillRect(0, 0, W, H);
+    c.save(); rr(c, IX, IY, IW, IH, FR - 2); c.clip(); c.drawImage(BAND, IX, BAND_Y, IW, BAND_H); c.restore();
+    c.save(); rr(c, M + 1, M + 1, W - 2*M - 2, H - 2*M - 2, FR - 1); c.lineWidth = 2; c.strokeStyle = C.basalt; c.stroke(); c.restore();
+
+    const blocks = blocksOf(d), n = blocks.length;
+    if (!n) return { k: 1 };
+    const T1 = blocks.reduce((s, b) => s + b.h, 0);
+    const k = Math.min(1, (CH - (n - 1)*28) / T1);
+    const gap = n > 1 ? Math.min(84, (CH - k*T1) / (n - 1)) : 0;
+    let y = CT + Math.max(0, (CH - k*T1 - (n - 1)*gap) / 2);
+
+    for (const b of blocks) {
+      let yy = y;
+      if (b.t === 'head') {
+        if (d.greet) {
+          const icon = 30*k, g = 16*k;
+          const s = fit(c, BAT7, 32*k, d.greet, .16, CW - 2*(icon + g));
+          const tw = spacedWidth(c, d.greet, s*.16), rowW = 2*icon + 2*g + tw;
+          const x = W/2 - rowW/2, cy = yy + 22*k;
+          tangerine(c, x, cy - icon/2, icon);
+          c.fillStyle = C.sea; drawSpaced(c, d.greet, x + icon + g, cy, s*.16, 'left');
+          tangerine(c, x + icon + g + tw + g, cy - icon/2, icon);
+          yy += 50*k;
+        }
+        if (d.title) {
+          const s = fit(c, SONG, 132*k, d.title, .02, CW);
+          c.fillStyle = C.basalt; drawSpaced(c, d.title, W/2, yy + 72.5*k, s*.02);
+        }
+      } else if (b.t === 'mains') {
+        if (d.mainsTitle) { secTitle(c, d.mainsTitle, yy, k); yy += 70*k; }
+        for (const m of d.mains) {
+          const s = fit(c, SONG, 74*k, m, .02, CW);
+          c.fillStyle = C.basalt; drawSpaced(c, m, W/2, yy + 44.5*k, s*.02);
+          yy += 101*k;
+        }
+      } else if (b.t === 'sides') {
+        if (d.sidesTitle) { secTitle(c, d.sidesTitle, yy, k); yy += 70*k; }
+        const two = b.cols === 2, colW = two ? (CW - 1.5)/2 : CW;
+        if (two) { c.fillStyle = C.hair; c.fillRect(CX0 + colW, yy, 1.5, (b.rows*54 + (b.rows - 1)*18)*k); }
+        d.sides.forEach((t, i) => {
+          const col = two ? i % 2 : 0, row = two ? Math.floor(i/2) : i;
+          const cx = two ? (col === 0 ? CX0 + colW/2 : CX0 + colW + 1.5 + colW/2) : W/2;
+          fit(c, BAT7, 40*k, t, 0, colW - 24);
+          c.fillStyle = C.basalt; drawSpaced(c, t, cx, yy + (row*72 + 27)*k, 0);
+        });
+      } else if (b.t === 'soup') {
+        if (d.soupTitle) { secTitle(c, d.soupTitle, yy, k); yy += 70*k; }
+        const ph = (44 + b.inner)*k;
+        rr(c, CX0, yy, CW, ph, 20*k); c.fillStyle = C.seaPale; c.fill();
+        const potW = 210*k, potH = 194*k, g = 30*k, innerX = CX0 + 30*k, innerW = CW - 70*k;
+        const avail = innerW - potW - g;
+        const names = d.soups.map(t => { const s = fit(c, SONG, 74*k, t, .02, avail); return { t, s, w: spacedWidth(c, t, s*.02) }; });
+        let sub = null;
+        if (d.soupSub) { const s = fit(c, BAT4, 32*k, d.soupSub, 0, avail); sub = { t: d.soupSub, s, w: spacedWidth(c, d.soupSub, 0) }; }
+        const textW = Math.max(sub ? sub.w : 0, ...names.map(x => x.w));
+        const gx = innerX + (innerW - (potW + g + textW))/2;
+        c.drawImage(POT, gx, yy + (ph - potH)/2, potW, potH);
+        const tx = gx + potW + g;
+        let ty = yy + (ph - b.th*k)/2;
+        names.forEach(x => { c.font = SONG(x.s); c.fillStyle = C.basalt; drawSpaced(c, x.t, tx, ty + 42.5*k, x.s*.02, 'left'); ty += 89*k; });
+        if (sub) { c.font = BAT4(sub.s); c.fillStyle = C.muted; drawSpaced(c, sub.t, tx, ty + 4*k + 22.5*k, 0, 'left'); }
+      } else if (b.t === 'closing') {
+        fit(c, SONG, 44*k, d.closing, 0, CW);
+        c.fillStyle = C.tang; drawSpaced(c, d.closing, W/2, yy + 26.5*k, 0);
+      }
+      y += b.h*k + gap;
+    }
+    return { k };
+  }
+
+  async function ensureFonts(d) {
+    if (!document.fonts || !document.fonts.load) return;
+    const song = [d.title, d.mainsTitle, d.sidesTitle, d.soupTitle, d.closing, ...d.mains, ...d.soups].join('') || '가';
+    const b7 = [d.greet, ...d.sides].join('') || '가';
+    const b4 = d.soupSub || '가';
+    try {
+      await Promise.all([
+        document.fonts.load(SONG(40), song),
+        document.fonts.load(BAT7(40), b7),
+        document.fonts.load(BAT4(40), b4)
+      ]);
+    } catch (e) {}
+  }
+
+  // ---------- 미리보기 ----------
+  const pv = $('pv'), note = $('note');
+  let seq = 0, timer = null;
+  async function renderPreview() {
+    const my = ++seq, d = model();
+    await ensureFonts(d);
+    if (my !== seq) return;
+    const { k } = draw(pv.getContext('2d'), 1, d);
+    note.textContent = k < 0.9 ? '메뉴가 많아서 글씨를 조금 줄였어요.' : '';
+    schedulePrebuild();
+  }
+  function onChange() { persist(); syncChips(); clearTimeout(timer); timer = setTimeout(renderPreview, 120); }
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { clearTimeout(timer); timer = setTimeout(renderPreview, 60); });
+
+  // ---------- 저장 · 공유 ----------
+  const btnPng = $('save-png'), btnPdf = $('save-pdf'), statusEl = $('status');
+  const hasPdf = !!(window.jspdf && window.jspdf.jsPDF);
+  if (!hasPdf) { btnPdf.hidden = true; $('actions').classList.add('single'); }
+  const setStatus = t => { statusEl.textContent = t; };
+  const canShareFiles = (() => {
+    try {
+      const f = new File([new Blob(['x'], { type: 'image/png' })], 'test.png', { type: 'image/png' });
+      return !!(window.isSecureContext && navigator.canShare && navigator.share && navigator.canShare({ files: [f] }));
+    } catch (e) { return false; }
+  })();
+  if (canShareFiles) { btnPng.textContent = '이미지 저장 · 공유'; $('share-hint').hidden = false; }
+
+  const baseName = () => {
+    const now = new Date();
+    const ds = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const t = (state.title.trim() || '메뉴판').replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, '_');
+    return `${t}_${ds}`;
+  };
+  let busy = false;
+  const setBusy = v => { busy = v; btnPng.disabled = v; btnPdf.disabled = v; };
+
+  // 같은 내용이면 이미 만든 파일을 재사용
+  let cache = { key: '', png: null, pdf: null };
+  const keyOf = d => JSON.stringify(d);
+  const toBlob = (cv, type) => new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), type));
+  async function build(kind, d) {
+    await ensureFonts(d);
+    const ex = document.createElement('canvas'); ex.width = W*2; ex.height = H*2;
+    draw(ex.getContext('2d'), 2, d);
+    if (kind === 'png') return toBlob(ex, 'image/png');
+    const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    pdf.addImage(ex.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
+    return pdf.output('blob');
+  }
+  async function getFile(kind) {
+    const d = model(), key = keyOf(d);
+    if (cache.key !== key) cache = { key, png: null, pdf: null };
+    if (cache[kind]) return cache[kind];
+    const blob = await build(kind, d);
+    if (cache.key === key) cache[kind] = blob;
+    return blob;
+  }
+  // 휴대폰에서는 입력이 멈추면 이미지를 미리 만들어 둬서, 버튼을 누르자마자 공유 창이 뜨게 함
+  let prebuildTimer = null;
+  function schedulePrebuild() {
+    if (!canShareFiles) return;
+    clearTimeout(prebuildTimer);
+    prebuildTimer = setTimeout(() => { if (!busy) getFile('png').catch(() => {}); }, 900);
+  }
+
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
+  async function save(kind) {
+    if (busy) return;
+    const name = baseName() + (kind === 'png' ? '.png' : '.pdf');
+    const type = kind === 'png' ? 'image/png' : 'application/pdf';
+    const key = keyOf(model());
+    let blob = (cache.key === key && cache[kind]) || null;
+    if (!blob) {
+      setBusy(true); setStatus('파일을 만드는 중이에요…');
+      try { blob = await getFile(kind); }
+      catch (e) { setBusy(false); setStatus('파일을 만들지 못했어요. 다시 눌러 주세요.'); return; }
+      setBusy(false);
+    }
+    const file = new File([blob], name, { type });
+    if (canShareFiles && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); setStatus(''); return; }
+      catch (e) {
+        if (e && e.name === 'AbortError') { setStatus(''); return; }
+        if (e && e.name === 'NotAllowedError') { setStatus('파일이 준비됐어요. 버튼을 한 번 더 눌러 주세요.'); return; }
+      }
+    }
+    download(blob, name);
+    setStatus('저장했어요. 다운로드 폴더를 확인하세요.');
+  }
+  btnPng.addEventListener('click', () => save('png'));
+  btnPdf.addEventListener('click', () => save('pdf'));
+
+  // ---------- 시작 ----------
+  areas.forEach(autoGrow);
+  syncChips();
+  renderPreview();
+})();
+</script>
+</body>
+</html>
