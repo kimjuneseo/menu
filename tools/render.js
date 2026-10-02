@@ -1,5 +1,5 @@
 // 사용법: node render.js <index.html 또는 주소> <출력.png> [states/상태.json]
-// 메뉴판 캔버스(#pv, 1240x1754)를 PNG 로 저장하고 {fonts, note, errors} 를 출력한다.
+// 메뉴판 캔버스(#pv, A4 1240x1754 · 스토리 1240x2205)를 PNG 로 저장하고 {fonts, note, errors} 를 출력한다.
 // 상태 파일({"jeju-menu-v1": {...}})을 주면 localStorage 에 넣고 연다. 없으면 빈 상태(기본 메뉴).
 const fs = require('fs');
 const path = require('path');

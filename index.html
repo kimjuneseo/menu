@@ -54,6 +54,11 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Gowun Dodum',-
 .sheet.story{aspect-ratio:1080/1920;max-width:min(620px,36vh)}
 .sheet canvas,.sheet img{display:block;width:100%;height:100%}
 .fmt{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 auto 12px}
+.fmt .chip{min-height:44px;font-size:16px}
+@media (min-width:920px){   /* PC: 고정된 미리보기가 창 높이 안에 들어오게 */
+  .sheet{max-width:min(620px,calc((100vh - 130px)*1240/1754))}
+  .sheet.story{max-width:min(620px,calc((100vh - 130px)*1080/1920))}
+}
 .sheet img{-webkit-touch-callout:default}
 .preview-note{max-width:620px;margin:10px auto 0;text-align:center;font-size:14px;color:var(--muted);min-height:1.5em}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 20px 0;display:flex;flex-direction:column;gap:20px;min-width:0}
@@ -270,7 +275,7 @@ details[open] summary::before{transform:rotate(45deg)}
     fmt: state.fmt
   });
 
-  // ---------- 메뉴판 그리기 (A4: 1240 x 1754 기준 단위) ----------
+  // ---------- 메뉴판 그리기 (가로 1240 기준 단위, 세로는 geo(fmt)) ----------
   const C = {
     paper:'#F5F8FC', fiber:'#C7D2DF', ink:'#23262B', muted:'#636A73', stroke:'#4A4F57',
     seal:'#B5372B', hair:'rgba(35,38,43,0.24)',
@@ -285,7 +290,7 @@ details[open] summary::before{transform:rotate(45deg)}
   // 판형별 세로 치수. 스토리는 1080x1920 비율이고, 위 15%·아래 15.6%는 인스타 화면(프로필·메시지 줄)에 가려지니 글을 두지 않음
   const geo = fmt => {
     const st = fmt === 'story', H = st ? 1920*W/1080 : 1754, BAND_Y = H - IY - BAND_H;
-    const CT = st ? 290 : IY + 40, CB = st ? Math.min(BAND_Y - 10, H - 344) : BAND_Y - 10;   // 아래는 해(붉은 원)에 닿지 않게
+    const CT = st ? 314 : IY + 40, CB = st ? Math.min(BAND_Y - 10, H - 344) : BAND_Y - 10;   // 아래는 해(붉은 원)에 닿지 않게
     return { H, BAND_Y, CT, CB, CH: CB - CT, kMax: st ? 1.12 : 1, out: st ? [1080, 1920] : [W*2, 3508] };
   };
   const POT_CW = 240, POT_CH = 224, POT_W = 200, POT_H = POT_W*POT_CH/POT_CW;   // 뚝배기 캐시 크기 · 그릴 크기
@@ -350,8 +355,8 @@ details[open] summary::before{transform:rotate(45deg)}
 
 
   // 한지 섬유결
-  function makePaper(H) {
-    const sc = 2, cv = document.createElement('canvas'); cv.width = W*sc; cv.height = Math.ceil(H*sc);
+  function makePaper(H, sc) {
+    const cv = document.createElement('canvas'); cv.width = W*sc; cv.height = Math.ceil(H*sc);
     const c = cv.getContext('2d'); c.scale(sc, sc);
     c.fillStyle = C.paper; c.fillRect(0, 0, W, H);
     const rnd = seeded(7), U = (lo, hi) => lo + (hi - lo)*rnd();
@@ -547,7 +552,9 @@ details[open] summary::before{transform:rotate(45deg)}
     const cand = [], sp = [];
     let p = 0;
     for (const [t, st] of segs) { if (!st) for (let j = 0; j < t.length; j++) (t[j] === ' ' ? sp : cand).push(p + j); p += t.length; }
-    const list = sp.length ? sp.map(i => [i, 1]) : cand.filter(i => i > 0).map(i => [i, 0]);
+    const full = segs.map(s => s[0]).join(''), open = i => full.slice(0, i).split('(').length > full.slice(0, i).split(')').length;
+    const out = sp.filter(i => !open(i)), use = out.length ? out : sp;   // 괄호 안 띄어쓰기에서는 되도록 나누지 않음
+    const list = use.length ? use.map(i => [i, 1]) : cand.filter(i => i > 0).map(i => [i, 0]);
     let best = null, bd = 1e9;
     for (const [i, skip] of list) { const dd = Math.abs(segsW(MC, cutSegs(segs, i, skip)[0], SS) - w/2); if (dd < bd) { bd = dd; best = cutSegs(segs, i, skip); } }
     return best && best[0].length && best[1].length ? { lines: best, h: (SL + SLH)*f, w, f } : { lines: [segs], h: SL*f, w, f };
@@ -582,7 +589,7 @@ details[open] summary::before{transform:rotate(45deg)}
   function blocksOf(d, c, wrap) {
     const b = [], fs = d.fs;
     const tf = d.title ? titleF(c, d) : 1;
-    if (d.title) b.push({ t: 'head', h: 212*tf, tf });
+    if (d.title) b.push({ t: 'head', h: (212 + 14)*tf, tf });   // 제목 아래 숨 쉴 자리 14
     const secT = t => t ? 70 : 0;
     if (d.mains.length) b.push({ t: 'mains', h: secT(d.mainsTitle) + d.mains.length*89*fs.mains + (d.mains.length - 1)*12 });
     if (d.sides.length) {
@@ -614,7 +621,7 @@ details[open] summary::before{transform:rotate(45deg)}
 
   function draw(c, scale, d) {
     const { H, BAND_Y, CT, CH, kMax } = geo(d.fmt);
-    if (!PAPER[d.fmt]) PAPER[d.fmt] = makePaper(H);
+    if (!PAPER[d.fmt]) PAPER[d.fmt] = makePaper(H, d.fmt === 'story' ? 1 : 2);
     if (!BAND) BAND = makeBand();
     if (!POT) POT = makePot();
     if (!SALAD_IC) SALAD_IC = makeSalad();
@@ -728,7 +735,7 @@ details[open] summary::before{transform:rotate(45deg)}
   const fmtBtns = [...document.querySelectorAll('.chip[data-fmt]')];
   const syncFmt = () => {
     fmtBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fmt === state.fmt)));
-    sheet.classList.toggle('story', state.fmt === 'story');
+    syncSave();
   };
   fmtBtns.forEach(b => b.addEventListener('click', () => { state.fmt = b.dataset.fmt; syncFmt(); onChange(); }));
   let seq = 0, timer = null;
@@ -738,8 +745,9 @@ details[open] summary::before{transform:rotate(45deg)}
     if (my !== seq) return;
     const ph = Math.ceil(geo(d.fmt).H);
     if (pv.height !== ph) pv.height = ph;
+    sheet.classList.toggle('story', d.fmt === 'story');
     const { k } = draw(pv.getContext('2d'), 1, d);
-    note.textContent = (d.fmt === 'story' ? '인스타 스토리 크기(1080×1920)로 저장돼요. ' : '') + (k < 0.9 ? '메뉴가 많아서 글씨를 조금 줄였어요.' : '');
+    note.textContent = (d.fmt === 'story' ? '이미지는 인스타 스토리 크기(1080×1920)로, 인쇄용 PDF는 A4로 저장돼요. ' : '') + (k < 0.9 ? '메뉴가 많아서 글씨를 조금 줄였어요.' : '');
     schedulePrebuild();
   }
   function onChange() { persist(); syncChips(); clearTimeout(timer); timer = setTimeout(renderPreview, 120); }
@@ -756,8 +764,15 @@ details[open] summary::before{transform:rotate(45deg)}
       return !!(window.isSecureContext && navigator.canShare && navigator.share && navigator.canShare({ files: [f] }));
     } catch (e) { return false; }
   })();
-  // 가운데 점 앞뒤(\u2060)로는 줄을 나누지 않아 폰에서는 '이미지 / 저장·공유'로만 나뉨
-  if (canShareFiles) { btnPng.textContent = '이미지 저장\u2060·\u2060공유'; $('share-hint').hidden = false; }
+  // 저장 버튼에 지금 판형을 보여 줌 (어제 스토리로 둔 채 카톡에 보내지 않게). 가운데 점 앞뒤(\u2060)로는 줄을 나누지 않음
+  const shareHint = $('share-hint');
+  function syncSave() {
+    const st = state.fmt === 'story';
+    btnPng.textContent = (st ? '스토리 ' : '') + (canShareFiles ? '이미지 저장\u2060·\u2060공유' : '이미지 저장');
+    shareHint.hidden = !canShareFiles;
+    shareHint.textContent = st ? '공유 창에서 인스타그램을 고르면 스토리로 올릴 수 있어요. 아이폰은 ‘이미지 저장’을 누르면 사진첩에 저장돼요.'
+      : '공유 창에서 카카오톡을 고르면 바로 보낼 수 있어요. 아이폰은 ‘이미지 저장’을 누르면 사진첩에 저장돼요.';
+  }
 
   const baseName = () => {
     const now = new Date();
