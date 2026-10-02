@@ -4,7 +4,7 @@
   "description": "메뉴판 미리보기 렌더 · 저장 확인 스크립트 (배포와 무관)",
   "scripts": {
     "render": "node render.js ../index.html out/default.png states/default.json",
-    "check": "node render-all.js && node save-check.js ../index.html out/download"
+    "check": "node render-all.js && node save-check.js ../index.html out/download && node save-check.js ../index.html out/download-story story"
   },
   "dependencies": {
     "puppeteer-core": "^23.11.1"

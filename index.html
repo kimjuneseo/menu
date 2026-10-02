@@ -51,7 +51,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:'Gowun Dodum',-
   .preview{order:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px)}
 }
 .sheet{width:100%;max-width:620px;margin:0 auto;aspect-ratio:1240/1754;background:#F5F8FC;border-radius:8px;box-shadow:var(--shadow);overflow:hidden}
+.sheet.story{aspect-ratio:1080/1920;max-width:min(620px,36vh)}
 .sheet canvas,.sheet img{display:block;width:100%;height:100%}
+.fmt{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:0 auto 12px}
 .sheet img{-webkit-touch-callout:default}
 .preview-note{max-width:620px;margin:10px auto 0;text-align:center;font-size:14px;color:var(--muted);min-height:1.5em}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px 20px 0;display:flex;flex-direction:column;gap:20px;min-width:0}
@@ -94,7 +96,7 @@ details[open] summary::before{transform:rotate(45deg)}
 <body>
 <header class="top">
   <h1>메뉴판 만들기</h1>
-  <p>메뉴 이름만 바꾸면 A4 메뉴판이 바로 만들어져요. 입력한 내용은 이 휴대폰(브라우저)에 저장돼서 다음에 열어도 그대로 남아 있어요.</p>
+  <p>메뉴 이름만 바꾸면 A4 메뉴판과 인스타 스토리 이미지가 바로 만들어져요. 입력한 내용은 이 휴대폰(브라우저)에 저장돼서 다음에 열어도 그대로 남아 있어요.</p>
 </header>
 
 <main class="app">
@@ -141,11 +143,6 @@ details[open] summary::before{transform:rotate(45deg)}
     <details>
       <summary>문구 바꾸기</summary>
       <div class="more">
-        <div class="field">
-          <div class="label-row"><label class="label" for="f-greet">제목 아래 날짜</label><span class="hint">‘○월 ○일 ○요일’ 모양이면 매일 바뀌어요</span></div>
-          <input id="f-greet" autocomplete="off">
-          <button type="button" class="linkbtn" id="today">오늘 날짜로 되돌리기</button>
-        </div>
         <div class="field"><label class="label" for="f-mainsTitle">메인 칸 이름</label><input id="f-mainsTitle" autocomplete="off"></div>
         <div class="field"><label class="label" for="f-sidesTitle">반찬 칸 이름</label><input id="f-sidesTitle" autocomplete="off"></div>
         <div class="field"><label class="label" for="f-soupTitle">뚝배기 칸 이름</label><input id="f-soupTitle" autocomplete="off"></div>
@@ -163,7 +160,11 @@ details[open] summary::before{transform:rotate(45deg)}
   </section>
 
   <section class="preview" aria-label="미리보기">
-    <div class="sheet">
+    <div class="fmt chips" role="group" aria-label="만들 크기">
+      <button type="button" class="chip" data-fmt="a4">A4 메뉴판</button>
+      <button type="button" class="chip" data-fmt="story">인스타 스토리</button>
+    </div>
+    <div class="sheet" id="sheet">
       <canvas id="pv" width="1240" height="1754" aria-label="메뉴판 미리보기"></canvas>
     </div>
     <p class="preview-note" id="note"></p>
@@ -173,19 +174,8 @@ details[open] summary::before{transform:rotate(45deg)}
 <script>
 (() => {
   // ---------- 상태 ----------
-  const today = () => { const n = new Date(); return `${n.getMonth() + 1}월 ${n.getDate()}일 ${'일월화수목금토'[n.getDay()]}요일`; };
-  const DATE_RE = /^(\d{1,2})월 (\d{1,2})일 [일월화수목금토]요일$/;
-  // 'N월 N일 X요일' 이 오늘보다 앞이면 true (연말·연초는 가까운 쪽 해로 봄)
-  const staleDate = t => {
-    const m = DATE_RE.exec(String(t || '').trim()); if (!m) return false;
-    const n = new Date(), t0 = new Date(n.getFullYear(), n.getMonth(), n.getDate()), d = new Date(n.getFullYear(), m[1] - 1, +m[2]);
-    const diff = (d - t0)/864e5;
-    if (diff > 182) d.setFullYear(d.getFullYear() - 1); else if (diff < -182) d.setFullYear(d.getFullYear() + 1);
-    return d < t0;
-  };
   const DEFAULTS = {
     title: '오늘의 중식',
-    greet: today(),
     mainsTitle: '메인 요리',
     mains: '간장돼지불고기\n소시지볶음',
     sidesTitle: '밥과 반찬',
@@ -201,15 +191,15 @@ details[open] summary::before{transform:rotate(45deg)}
   const SZ_MIN = 70, SZ_MAX = 150, SZ_STEP = 10;
   const sizeOf = v => { const n = Math.round(Number(v)/SZ_STEP)*SZ_STEP; return n >= SZ_MIN && n <= SZ_MAX ? n : 100; };
   // 예전 기본 문구(사투리·추천)를 그대로 쓰던 폰은 새 기본값으로 바꿔 줌. 기본값을 또 바꾸면 예전 값을 배열에 더할 것
-  const OLD = { greet: ['혼저옵서예'], closing: ['하영 드십서예'], mainsTitle: ['오늘의 추천'], soupSub: ['뜨끈한 뚝배기에 담아 드려요'] };
+  const OLD = { closing: ['하영 드십서예'], mainsTitle: ['오늘의 추천'], soupSub: ['뜨끈한 뚝배기에 담아 드려요'] };
   const KEY = 'jeju-menu-v1';
   const load = () => {
     let s = Object.assign({}, DEFAULTS);
     try { const raw = localStorage.getItem(KEY); if (raw) s = Object.assign(s, JSON.parse(raw)); } catch (e) {}
     for (const k in OLD) if (OLD[k].includes(s[k])) s[k] = DEFAULTS[k];
-    if (staleDate(s.greet)) s.greet = today();
     const sz = s.size && typeof s.size === 'object' ? s.size : {};
     s.size = {}; SIZES.forEach(([k]) => { s.size[k] = sizeOf(sz[k]); });
+    s.fmt = s.fmt === 'story' ? 'story' : 'a4';   // 만들 크기: A4 메뉴판 · 인스타 스토리
     return s;
   };
   const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
@@ -246,7 +236,7 @@ details[open] summary::before{transform:rotate(45deg)}
       return;
     }
     clearTimeout(resetArmed); resetArmed = null; resetBtn.textContent = '예시 메뉴로 되돌리기';
-    state = Object.assign({}, DEFAULTS, { greet: today(), size: state.size });   // 글씨 크기는 그대로 둠
+    state = Object.assign({}, DEFAULTS, { size: state.size, fmt: state.fmt });   // 글씨 크기·만들 크기는 그대로 둠
     FIELDS.forEach(k => { $('f-' + k).value = state[k]; });
     areas.forEach(autoGrow);
     onChange();
@@ -269,33 +259,35 @@ details[open] summary::before{transform:rotate(45deg)}
   });
   $('size-reset').addEventListener('click', () => { SIZES.forEach(([k]) => { state.size[k] = 100; }); syncSizes(); onChange(); });
 
-  $('today').addEventListener('click', () => {
-    state.greet = today(); $('f-greet').value = state.greet; onChange();
-  });
-
   const lines = s => String(s || '').split(/[\n,]/).map(t => t.trim()).filter(Boolean);
   const model = () => ({
-    title: state.title.trim(), greet: state.greet.trim(),
+    title: state.title.trim(),
     mainsTitle: state.mainsTitle.trim(), mains: lines(state.mains),
     sidesTitle: state.sidesTitle.trim(), sides: lines(state.sides),
     soupTitle: state.soupTitle.trim(), soups: lines(state.soup), soupSub: state.soupSub.trim(),
     salad: state.salad.trim(), closing: state.closing.trim(),
-    fs: Object.fromEntries(SIZES.map(([k]) => [k, state.size[k]/100]))
+    fs: Object.fromEntries(SIZES.map(([k]) => [k, state.size[k]/100])),
+    fmt: state.fmt
   });
 
   // ---------- 메뉴판 그리기 (A4: 1240 x 1754 기준 단위) ----------
   const C = {
     paper:'#F5F8FC', fiber:'#C7D2DF', ink:'#23262B', muted:'#636A73', stroke:'#4A4F57',
-    seal:'#B5372B', sealInk:'#FBF3EA', hair:'rgba(35,38,43,0.24)',
+    seal:'#B5372B', hair:'rgba(35,38,43,0.24)',
     card:'#FFFFFF', cardLine:'rgba(35,38,43,0.20)', shade:'rgba(40,62,96,0.10)', sun:'#C8503A'
   };
   const INK = a => `rgba(35,38,43,${a})`, GLOW = a => `rgba(248,250,253,${a})`;
-  const W = 1240, H = 1754;
+  const W = 1240;                               // 가로는 두 판형 모두 1240 기준
   const FO = 48, FI = 56;                       // 바깥·안쪽 테두리 선 위치
-  const IX = FI + 1, IY = FI + 1, IW = W - 2*IX, IH = H - 2*IY;
-  const BAND_H = 196, BAND_Y = IY + IH - BAND_H;
+  const IX = FI + 1, IY = FI + 1, IW = W - 2*IX;
+  const BAND_H = 196;
   const CX0 = 152, CW = W - 2*CX0;
-  const CT = IY + 40, CB = BAND_Y - 10, CH = CB - CT;   // 아래는 해(붉은 원)에 닿지 않게
+  // 판형별 세로 치수. 스토리는 1080x1920 비율이고, 위 15%·아래 15.6%는 인스타 화면(프로필·메시지 줄)에 가려지니 글을 두지 않음
+  const geo = fmt => {
+    const st = fmt === 'story', H = st ? 1920*W/1080 : 1754, BAND_Y = H - IY - BAND_H;
+    const CT = st ? 290 : IY + 40, CB = st ? Math.min(BAND_Y - 10, H - 344) : BAND_Y - 10;   // 아래는 해(붉은 원)에 닿지 않게
+    return { H, BAND_Y, CT, CB, CH: CB - CT, kMax: st ? 1.12 : 1, out: st ? [1080, 1920] : [W*2, 3508] };
+  };
   const POT_CW = 240, POT_CH = 224, POT_W = 200, POT_H = POT_W*POT_CH/POT_CW;   // 뚝배기 캐시 크기 · 그릴 크기
   const PAD_X = 36;                                // 카드 안 좌우 여백
   const SALAD = '샐러드바', SALAD_RE = /샐러드(\s*바)?/, SI = 60, SIG = 16, SS = 36, SL = 48, SLH = 46;   // 샐러드바 줄: 아이콘 폭·간격, 글씨, 줄 높이·간격
@@ -358,13 +350,13 @@ details[open] summary::before{transform:rotate(45deg)}
 
 
   // 한지 섬유결
-  function makePaper() {
-    const sc = 2, cv = document.createElement('canvas'); cv.width = W*sc; cv.height = H*sc;
+  function makePaper(H) {
+    const sc = 2, cv = document.createElement('canvas'); cv.width = W*sc; cv.height = Math.ceil(H*sc);
     const c = cv.getContext('2d'); c.scale(sc, sc);
     c.fillStyle = C.paper; c.fillRect(0, 0, W, H);
     const rnd = seeded(7), U = (lo, hi) => lo + (hi - lo)*rnd();
     c.strokeStyle = C.fiber; c.lineCap = 'round';
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0, n = Math.round(120*H/1754); i < n; i++) {
       const x = U(0, W), y = U(0, H), an = U(0, Math.PI*2), len = U(14, 46), bend = U(-.5, .5);
       const x1 = x + Math.cos(an)*len, y1 = y + Math.sin(an)*len;
       const mx = (x + x1)/2 - Math.sin(an)*len*bend*.4, my = (y + y1)/2 + Math.cos(an)*len*bend*.4;
@@ -483,18 +475,6 @@ details[open] summary::before{transform:rotate(45deg)}
     return cv;
   }
 
-  // '제주' 낙관
-  function seal(c, cx, cy, size) {
-    c.save(); c.translate(cx, cy); c.rotate(-4*Math.PI/180);
-    const h = size/2;
-    rr(c, -h, -h, size, size, size*.07); c.fillStyle = C.seal; c.fill();
-    c.strokeStyle = C.sealInk; c.lineWidth = Math.max(1.2, size*.022);
-    rr(c, -h + size*.09, -h + size*.09, size*.82, size*.82, size*.04); c.stroke();
-    c.fillStyle = C.sealInk; c.textAlign = 'center'; c.font = SONG(size*.36);
-    c.fillText('제', 0, -size*.2); c.fillText('주', 0, size*.21);
-    c.restore();
-  }
-
   // 샐러드바 아이콘: 먹선 그릇에 굵은 잎 세 장 + 붉은 방울토마토 (작게 줄여도 알아보게 단순하게)
   function makeSalad() {
     const cv = document.createElement('canvas'); cv.width = 128; cv.height = 116;
@@ -593,18 +573,16 @@ details[open] summary::before{transform:rotate(45deg)}
     }
   }
 
-  let PAPER = null, BAND = null, POT = null, SALAD_IC = null;
+  const PAPER = {}; let BAND = null, POT = null, SALAD_IC = null;
 
   // 블록 높이와 줄 나눔은 여기서만 정하고 draw는 그대로 따름
-  // 제목 낙관 크기 · 제목이 실제로 커지는 비율 (폭이 차면 더 안 커지고, 100%보다 작아지지도 않음)
-  const sealOf = f => 100*(1 + (f - 1)*.5);
-  const titleF = (c, d) => { const f = d.fs.title, w = widthAt(c, BRUSH, 236*f, d.title, .03), a = CW - 2*(sealOf(f) + 18); return w > a ? Math.min(f, Math.max(1, f*a/w)) : f; };
+  // 제목이 실제로 커지는 비율 (폭이 차면 더 안 커지고, 100%보다 작아지지도 않음)
+  const titleF = (c, d) => { const f = d.fs.title, w = widthAt(c, BRUSH, 236*f, d.title, .03); return w > CW ? Math.min(f, Math.max(1, f*CW/w)) : f; };
 
   function blocksOf(d, c, wrap) {
     const b = [], fs = d.fs;
     const tf = d.title ? titleF(c, d) : 1;
-    const head = (d.title ? 212*tf : 0) + (d.greet ? 52 : 0);
-    if (head) b.push({ t: 'head', h: head, tf });
+    if (d.title) b.push({ t: 'head', h: 212*tf, tf });
     const secT = t => t ? 70 : 0;
     if (d.mains.length) b.push({ t: 'mains', h: secT(d.mainsTitle) + d.mains.length*89*fs.mains + (d.mains.length - 1)*12 });
     if (d.sides.length) {
@@ -635,14 +613,16 @@ details[open] summary::before{transform:rotate(45deg)}
   }
 
   function draw(c, scale, d) {
-    if (!PAPER) PAPER = makePaper();
+    const { H, BAND_Y, CT, CH, kMax } = geo(d.fmt);
+    if (!PAPER[d.fmt]) PAPER[d.fmt] = makePaper(H);
     if (!BAND) BAND = makeBand();
     if (!POT) POT = makePot();
     if (!SALAD_IC) SALAD_IC = makeSalad();
     c.setTransform(scale, 0, 0, scale, 0, 0);
     c.lineJoin = 'miter'; c.lineCap = 'butt';
     c.textBaseline = 'middle';
-    c.drawImage(PAPER, 0, 0, W, H);
+    c.fillStyle = C.paper; c.fillRect(0, 0, W, H + 2);
+    c.drawImage(PAPER[d.fmt], 0, 0, W, H);
     c.drawImage(BAND, IX, BAND_Y, IW, BAND_H);
     c.strokeStyle = C.ink;
     c.lineWidth = 2.6; c.strokeRect(FO, FO, W - 2*FO, H - 2*FO);
@@ -651,7 +631,7 @@ details[open] summary::before{transform:rotate(45deg)}
     let blocks = blocksOf(d, c);
     const n = blocks.length, G = n - 1;
     if (!n) return { k: 1 };
-    const kOf = bs => Math.min(1, (CH - G*28) / bs.reduce((s, b) => s + b.h, 0));
+    const kOf = bs => Math.min(kMax, (CH - G*28) / bs.reduce((s, b) => s + b.h, 0));
     let k = kOf(blocks);
     // 샐러드바 문구가 한 줄로는 다른 글씨보다 눈에 띄게 작아질 때만 두 줄로
     const sb = blocks.find(b => b.sl);
@@ -665,18 +645,8 @@ details[open] summary::before{transform:rotate(45deg)}
     blocks.forEach((b, i) => { if (i) y += gap;
       let yy = y;
       if (b.t === 'head') {
-        if (d.title) {
-          const tf = b.tf, sealS = sealOf(tf)*k, sg = 18*k;
-          const s = fit(c, BRUSH, 236*tf*k, d.title, .03, CW - 2*(sealS + sg));
-          c.fillStyle = C.ink;
-          const tw = drawSpaced(c, d.title, W/2, yy + 104*tf*k, s*.03, 'center', s*.024);
-          seal(c, W/2 + tw/2 + sg + sealS/2, yy + 126*tf*k, sealS);
-          yy += 212*tf*k;
-        }
-        if (d.greet) {
-          const s = fit(c, BAT4, 30*k, d.greet, .3, CW*.8);
-          c.fillStyle = C.muted; drawSpaced(c, d.greet, W/2, yy + 28*k, s*.3);
-        }
+        const s = fit(c, BRUSH, 236*b.tf*k, d.title, .03, CW);
+        c.fillStyle = C.ink; drawSpaced(c, d.title, W/2, yy + 104*b.tf*k, s*.03, 'center', s*.024);
       } else if (b.t === 'mains') {
         if (d.mainsTitle) { secTitle(c, d.mainsTitle, yy, k); yy += 70*k; }
         const f = d.fs.mains;
@@ -739,10 +709,10 @@ details[open] summary::before{transform:rotate(45deg)}
 
   async function ensureFonts(d) {
     if (!document.fonts || !document.fonts.load) return;
-    const song = [d.mainsTitle, d.sidesTitle, d.soupTitle, d.closing, ...d.mains, ...d.soups, '제주'].join('') || '가';
+    const song = [d.mainsTitle, d.sidesTitle, d.soupTitle, d.closing, ...d.mains, ...d.soups].join('') || '가';
     const brush = d.title || '가';
     const b7 = [...d.sides, d.salad, d.salad ? SALAD : ''].join('') || '가';
-    const b4 = [d.greet, d.soupSub, d.salad, d.salad ? SALAD + '·' : ''].join('') || '가';
+    const b4 = [d.soupSub, d.salad, d.salad ? SALAD + '·' : ''].join('') || '가';
     try {
       await Promise.all([
         document.fonts.load(SONG(40), song),
@@ -754,14 +724,22 @@ details[open] summary::before{transform:rotate(45deg)}
   }
 
   // ---------- 미리보기 ----------
-  const pv = $('pv'), note = $('note');
+  const pv = $('pv'), note = $('note'), sheet = $('sheet');
+  const fmtBtns = [...document.querySelectorAll('.chip[data-fmt]')];
+  const syncFmt = () => {
+    fmtBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.fmt === state.fmt)));
+    sheet.classList.toggle('story', state.fmt === 'story');
+  };
+  fmtBtns.forEach(b => b.addEventListener('click', () => { state.fmt = b.dataset.fmt; syncFmt(); onChange(); }));
   let seq = 0, timer = null;
   async function renderPreview() {
     const my = ++seq, d = model();
     await ensureFonts(d);
     if (my !== seq) return;
+    const ph = Math.ceil(geo(d.fmt).H);
+    if (pv.height !== ph) pv.height = ph;
     const { k } = draw(pv.getContext('2d'), 1, d);
-    note.textContent = k < 0.9 ? '메뉴가 많아서 글씨를 조금 줄였어요.' : '';
+    note.textContent = (d.fmt === 'story' ? '인스타 스토리 크기(1080×1920)로 저장돼요. ' : '') + (k < 0.9 ? '메뉴가 많아서 글씨를 조금 줄였어요.' : '');
     schedulePrebuild();
   }
   function onChange() { persist(); syncChips(); clearTimeout(timer); timer = setTimeout(renderPreview, 120); }
@@ -795,9 +773,10 @@ details[open] summary::before{transform:rotate(45deg)}
   const keyOf = d => JSON.stringify(d);
   const toBlob = (cv, type) => new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(new Error('blob')), type));
   async function build(kind, d) {
+    if (kind === 'pdf') d = Object.assign({}, d, { fmt: 'a4' });   // 인쇄용은 늘 A4
     await ensureFonts(d);
-    const ex = document.createElement('canvas'); ex.width = W*2; ex.height = H*2;
-    draw(ex.getContext('2d'), 2, d);
+    const [ow, oh] = geo(d.fmt).out, ex = document.createElement('canvas'); ex.width = ow; ex.height = oh;
+    draw(ex.getContext('2d'), ow/W, d);
     if (kind === 'png') return toBlob(ex, 'image/png');
     const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
     pdf.addImage(ex.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 210, 297);
@@ -828,8 +807,7 @@ details[open] summary::before{transform:rotate(45deg)}
 
   async function save(kind) {
     if (busy) return;
-    refreshDate();
-    const name = baseName() + (kind === 'png' ? '.png' : '.pdf');
+    const name = baseName() + (kind === 'png' ? (state.fmt === 'story' ? '_스토리.png' : '.png') : '.pdf');
     const type = kind === 'png' ? 'image/png' : 'application/pdf';
     const key = keyOf(model());
     let blob = (cache.key === key && cache[kind]) || null;
@@ -854,18 +832,10 @@ details[open] summary::before{transform:rotate(45deg)}
   btnPdf.addEventListener('click', () => save('pdf'));
 
   // ---------- 시작 ----------
-  // 켜 둔 채 날짜가 바뀌어도 (홈 화면 앱은 새로 열지 않고 이어서 열림) 지난 날짜면 오늘로
-  function refreshDate() {
-    if (!staleDate(state.greet)) return;
-    state.greet = today(); $('f-greet').value = state.greet; onChange();
-  }
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDate(); });
-  window.addEventListener('pageshow', refreshDate);
-  window.addEventListener('focus', refreshDate);
-  setInterval(refreshDate, 60000);
   areas.forEach(autoGrow);
   syncChips();
   syncSizes();
+  syncFmt();
   renderPreview();
 })();
 </script>
